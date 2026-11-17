@@ -747,6 +747,22 @@
     press(k);
   });
 
+  // ---------- immersive fullscreen (phones) ----------
+  // Installed app: manifest "fullscreen" hides the status bar.
+  // In a browser tab: ask for fullscreen on the first tap (browsers only allow it after a tap).
+  function goFullscreen() {
+    const el = document.documentElement;
+    const req = el.requestFullscreen || el.webkitRequestFullscreen;
+    if (!req || document.fullscreenElement || document.webkitFullscreenElement) return;
+    if (!matchMedia("(pointer: coarse)").matches) return;
+    if (matchMedia("(display-mode: fullscreen)").matches) return;
+    try {
+      const p = req.call(el, { navigationUI: "hide" });
+      if (p && p.catch) p.catch(() => {});
+    } catch {}
+  }
+  document.addEventListener("pointerup", goFullscreen);
+
   // ---------- boot ----------
   startMode(P.mode, P.len);
   document.querySelector('meta[name="theme-color"]').content = getVar("--bg");

@@ -238,10 +238,15 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .h-cost { font-size: 16px; color: var(--near); }
 
 /* ============ KEYBOARD ============ */
-.keyboard { display: flex; flex-direction: column; gap: 6px; }
-.krow { display: flex; gap: 5px; justify-content: center; }
+/* keyboard breaks out of the 540px column to span the screen (capped on desktop) */
+.keyboard {
+  display: flex; flex-direction: column; gap: 6px;
+  width: min(calc(100vw - 8px), 820px);
+  align-self: center;
+}
+.krow { display: flex; gap: 4px; justify-content: center; }
 .key {
-  flex: 1; max-width: 46px; height: clamp(42px, 6.4dvh, 54px);
+  flex: 1 1 0; min-width: 0; height: clamp(46px, 7dvh, 60px);
   border: 0; background: rgba(40, 28, 80, 0.75);
   font-family: "Press Start 2P", monospace; font-size: 12px;
   color: var(--text);
@@ -249,7 +254,8 @@ button { font: inherit; color: inherit; cursor: pointer; }
   position: relative;
   transition: transform .05s, background .2s;
 }
-.key.wide { flex: 1.6; max-width: 76px; font-size: 9px; }
+.key.wide { flex: 1.6 1 0; font-size: 9px; }
+.krow:nth-child(2)::before, .krow:nth-child(2)::after { content: ""; flex: 0.5 1 0; }
 .key:active, .key.pressed { transform: translateY(3px); box-shadow: none; }
 .key.hit  { background: var(--hit);  color: var(--bg); }
 .key.near { background: var(--near); color: var(--bg); }
