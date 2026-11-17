@@ -681,8 +681,9 @@
         <div><b>${P.xp}</b><span>total xp</span></div>
       </div>
       <h3>GUESS SPREAD</h3>
-      ${distHtml(0)}
-      <div class="btn-row"><button class="btn alt" id="s-backup">BACKUP / RESTORE</button></div>`);
+      ${distHtml(0)}`);
+    // backup button sits right under the title so it's visible without scrolling
+    $("#modal-body h2").insertAdjacentHTML("afterend", `<button class="btn alt" id="s-backup" style="margin:0 0 6px">BACKUP / RESTORE</button>`);
     $("#s-backup").onclick = () => { SFX.click(); showBackup(); };
   }
 
@@ -891,6 +892,16 @@
   if (!P.seenHelp) setTimeout(showHelp, 400);
 
   if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
-    navigator.serviceWorker.register("sw.js").catch(() => {});
+    const hadController = !!navigator.serviceWorker.controller;
+    navigator.serviceWorker.register("sw.js", { updateViaCache: "none" })
+      .then((reg) => reg.update())
+      .catch(() => {});
+    // A new version took over: reload once so the player sees it straight away.
+    let reloaded = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (!hadController || reloaded || busy) return;
+      reloaded = true;
+      location.reload();
+    });
   }
 })();

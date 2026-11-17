@@ -1,5 +1,5 @@
 // Offline cache. Bump VERSION after changing any app file.
-const VERSION = "neonword-v6";
+const VERSION = "neonword-v7";
 const CORE = [
   "./", "index.html", "style.css", "app.js", "words.js", "audio.js", "bg.js",
   "manifest.json", "icon.svg", "icon-192.png", "icon-512.png",
@@ -37,9 +37,10 @@ self.addEventListener("fetch", (e) => {
     return;
   }
 
-  // app files: network-first so updates land, cache fallback when offline
+  // app files: network-first so updates land, cache fallback when offline.
+  // cache: "no-cache" skips the browser's HTTP cache (GitHub Pages caches 10 min).
   e.respondWith(
-    fetch(e.request)
+    fetch(e.request, { cache: "no-cache" })
       .then((res) => {
         const copy = res.clone();
         caches.open(VERSION).then((c) => c.put(e.request, copy));
