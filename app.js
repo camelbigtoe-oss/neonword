@@ -157,6 +157,7 @@
     const b = $("#board");
     b.style.setProperty("--len", G.len);
     b.style.setProperty("--rows", G.rows);
+    fitBoard();
     b.innerHTML = "";
     for (let r = 0; r < G.rows; r++) {
       const row = document.createElement("div");
@@ -178,6 +179,18 @@
       b.appendChild(row);
     }
   }
+
+  // Size tiles to fill whatever space is left between the message box and the hints.
+  function fitBoard() {
+    if (!G) return;
+    const wrap = $(".board-wrap"), b = $("#board");
+    const gap = 6;
+    const w = wrap.clientWidth, h = wrap.clientHeight;
+    if (!w || !h) return;
+    const t = Math.floor(Math.min(68, (w - gap * (G.len - 1)) / G.len, (h - 4 - gap * (G.rows - 1)) / G.rows));
+    b.style.setProperty("--tile", `${Math.max(24, t)}px`);
+  }
+  new ResizeObserver(fitBoard).observe(document.querySelector(".board-wrap"));
 
   function activeRow() { return $("#board").children[G.guesses.length]; }
 

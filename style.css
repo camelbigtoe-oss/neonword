@@ -187,6 +187,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .board {
   --gap: 6px;
   display: grid; gap: var(--gap);
+  /* fallback; app.js sets --tile from the real free space */
   --tile: min(60px, calc((100vw - 48px) / var(--len) - var(--gap)), calc((100dvh - 470px) / var(--rows) - var(--gap)));
 }
 .row { display: grid; grid-template-columns: repeat(var(--len), var(--tile)); gap: var(--gap); }

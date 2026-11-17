@@ -1,5 +1,5 @@
 // Offline cache. Bump VERSION after changing any app file.
-const VERSION = "neonword-v7";
+const VERSION = "neonword-v8";
 const CORE = [
   "./", "index.html", "style.css", "app.js", "words.js", "audio.js", "bg.js",
   "manifest.json", "icon.svg", "icon-192.png", "icon-512.png",
