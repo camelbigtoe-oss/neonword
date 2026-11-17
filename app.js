@@ -750,18 +750,28 @@
   // ---------- immersive fullscreen (phones) ----------
   // Installed app: manifest "fullscreen" hides the status bar.
   // In a browser tab: ask for fullscreen on the first tap (browsers only allow it after a tap).
-  function goFullscreen() {
-    const el = document.documentElement;
-    const req = el.requestFullscreen || el.webkitRequestFullscreen;
-    if (!req || document.fullscreenElement || document.webkitFullscreenElement) return;
-    if (!matchMedia("(pointer: coarse)").matches) return;
-    if (matchMedia("(display-mode: fullscreen)").matches) return;
+  const fsEl = () => document.fullscreenElement || document.webkitFullscreenElement;
+  const fsReq = document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen;
+  const fsExit = document.exitFullscreen || document.webkitExitFullscreen;
+  // No automatic fullscreen: the browser always shows its own "swipe to exit" pop-up
+  // for that. The installed home-screen app is fullscreen through the manifest, with no
+  // pop-up. The button stays as an opt-in for browser tabs only.
+  function enterFullscreen() {
+    if (!fsReq || fsEl()) return;
     try {
-      const p = req.call(el, { navigationUI: "hide" });
+      const p = fsReq.call(document.documentElement, { navigationUI: "hide" });
       if (p && p.catch) p.catch(() => {});
     } catch {}
   }
-  document.addEventListener("pointerup", goFullscreen);
+
+  const fsBtn = $("#btn-full");
+  const installed = matchMedia("(display-mode: fullscreen)").matches || matchMedia("(display-mode: standalone)").matches;
+  if (fsReq && !installed) fsBtn.hidden = false;
+  fsBtn.onclick = () => {
+    SFX.init(); SFX.click();
+    if (fsEl()) fsExit && fsExit.call(document);
+    else enterFullscreen();
+  };
 
   // ---------- boot ----------
   startMode(P.mode, P.len);

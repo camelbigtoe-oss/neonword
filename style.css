@@ -93,6 +93,12 @@ button { font: inherit; color: inherit; cursor: pointer; }
   transition: transform .08s;
 }
 .icon-btn:hover { color: var(--c1); }
+.icon-btn[hidden] { display: none; }
+@media (max-width: 400px) {
+  .icon-btn { width: 32px; height: 32px; font-size: 11px; }
+  .top-right { gap: 5px; }
+  .logo { font-size: 15px; letter-spacing: 1px; }
+}
 .icon-btn:active { transform: translateY(2px); }
 .icon-btn.off { opacity: .4; }
 
@@ -241,12 +247,12 @@ button { font: inherit; color: inherit; cursor: pointer; }
 /* keyboard breaks out of the 540px column to span the screen (capped on desktop) */
 .keyboard {
   display: flex; flex-direction: column; gap: 6px;
-  width: min(calc(100vw - 8px), 820px);
+  width: min(calc(100vw - 16px), 640px);
   align-self: center;
 }
-.krow { display: flex; gap: 4px; justify-content: center; }
+.krow { display: flex; gap: 5px; justify-content: center; }
 .key {
-  flex: 1 1 0; min-width: 0; height: clamp(46px, 7dvh, 60px);
+  flex: 1 1 0; min-width: 0; height: clamp(40px, 6dvh, 50px);
   border: 0; background: rgba(40, 28, 80, 0.75);
   font-family: "Press Start 2P", monospace; font-size: 12px;
   color: var(--text);
