@@ -681,7 +681,80 @@
         <div><b>${P.xp}</b><span>total xp</span></div>
       </div>
       <h3>GUESS SPREAD</h3>
-      ${distHtml(0)}`);
+      ${distHtml(0)}
+      <div class="btn-row"><button class="btn alt" id="s-backup">BACKUP / RESTORE</button></div>`);
+    $("#s-backup").onclick = () => { SFX.click(); showBackup(); };
+  }
+
+  // ---------- backup / restore ----------
+  const BACKUP_TAG = "NEONWORD1:";
+  function makeBackup() {
+    const bytes = new TextEncoder().encode(JSON.stringify(P));
+    let bin = "";
+    for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+    return BACKUP_TAG + btoa(bin);
+  }
+  function readBackup(code) {
+    code = (code || "").trim().replace(/\s+/g, "");
+    if (!code.startsWith(BACKUP_TAG)) throw new Error("not a NEONWORD backup");
+    const bin = atob(code.slice(BACKUP_TAG.length));
+    const data = JSON.parse(new TextDecoder().decode(Uint8Array.from(bin, (c) => c.charCodeAt(0))));
+    if (typeof data !== "object" || typeof data.xp !== "number" || !data.stats) throw new Error("backup looks broken");
+    return data;
+  }
+
+  function showBackup() {
+    const L = levelInfo(P.xp);
+    openModal(`
+      <h2>BACKUP</h2>
+      <p>Save your progress (level ${L.lvl}, ◈${P.credits}, ${P.history.length} logged codes) as a backup code or file. Keep it somewhere safe, like your notes app or email.</p>
+      <div class="btn-row">
+        <button class="btn" id="b-copy">COPY CODE</button>
+        <button class="btn alt" id="b-file">SAVE FILE</button>
+      </div>
+      <h3>RESTORE</h3>
+      <p>Paste a backup code, or load a backup file. This replaces the progress on this device.</p>
+      <textarea id="b-in" class="backup-box" rows="4" placeholder="NEONWORD1:..." spellcheck="false"></textarea>
+      <div class="btn-row">
+        <button class="btn" id="b-restore">RESTORE CODE</button>
+        <button class="btn alt" id="b-load">LOAD FILE</button>
+      </div>
+      <input type="file" id="b-pick" accept=".txt,text/plain" hidden />`);
+
+    $("#b-copy").onclick = async () => {
+      const code = makeBackup();
+      try { await navigator.clipboard.writeText(code); toast("BACKUP CODE COPIED"); SFX.coin(); }
+      catch { $("#b-in").value = code; $("#b-in").select(); toast("COPY THE CODE IN THE BOX"); }
+    };
+    $("#b-file").onclick = () => {
+      const blob = new Blob([makeBackup()], { type: "text/plain" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `neonword-backup-${dateKey()}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+      toast("BACKUP FILE SAVED");
+      SFX.coin();
+    };
+    const restore = (code) => {
+      let data;
+      try { data = readBackup(code); }
+      catch (e) { SFX.error(); toast(String(e.message || e).toUpperCase()); return; }
+      const lvl = levelInfo(data.xp).lvl;
+      if (!confirm(`Restore backup? Level ${lvl}, ${data.history ? data.history.length : 0} logged codes.\nThis replaces the progress on this device.`)) return;
+      P = Object.assign(defaults(), data);
+      save();
+      toast("PROGRESS RESTORED", true);
+      setTimeout(() => location.reload(), 700);
+    };
+    $("#b-restore").onclick = () => restore($("#b-in").value);
+    $("#b-load").onclick = () => $("#b-pick").click();
+    $("#b-pick").onchange = async (e) => {
+      const f = e.target.files && e.target.files[0];
+      if (f) restore(await f.text());
+    };
   }
 
   function showThemes() {

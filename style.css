@@ -381,6 +381,13 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .hist-meta { font-size: 16px; color: var(--dim); margin-left: auto; }
 .hist-clue { display: none; width: 100%; font-size: 17px; color: var(--near); }
 .hist-row.open .hist-clue { display: block; }
+.backup-box {
+  width: 100%; margin-top: 6px; padding: 8px; resize: vertical;
+  background: var(--bg); color: var(--c2); border: 0;
+  font-family: "VT323", monospace; font-size: 15px; word-break: break-all;
+  box-shadow: 0 -2px 0 0 var(--dim), 0 2px 0 0 var(--dim), -2px 0 0 0 var(--dim), 2px 0 0 0 var(--dim);
+  user-select: text; -webkit-user-select: text;
+}
 kbd { font-family: "Press Start 2P", monospace; font-size: 10px; color: var(--c2); }
 
 .levelup {
