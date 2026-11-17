@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <title>NEONWORD</title>
+  <meta name="description" content="A cyberpunk pixel word puzzle. Crack the code in six tries." />
+  <meta name="theme-color" content="#0b0620" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body data-theme="neon">
+  <canvas id="bg" aria-hidden="true"></canvas>
+  <canvas id="fx" aria-hidden="true"></canvas>
+  <div class="scanlines" aria-hidden="true"></div>
+
+  <div id="app">
+    <header class="top">
+      <button class="icon-btn" id="btn-help" aria-label="How to play">?</button>
+      <div class="logo" data-text="NEONWORD">NEONWORD</div>
+      <div class="top-right">
+        <button class="icon-btn" id="btn-sound" aria-label="Toggle sound">♪</button>
+        <button class="icon-btn" id="btn-themes" aria-label="Themes">◆</button>
+        <button class="icon-btn" id="btn-stats" aria-label="Stats">▤</button>
+      </div>
+    </header>
+
+    <section class="hud">
+      <div class="lvl">
+        <span class="lvl-label">LV <b id="lvl">1</b></span>
+        <div class="xpbar"><div class="xpfill" id="xpfill"></div></div>
+        <span class="xp-txt" id="xptxt">0/100</span>
+      </div>
+      <div class="credits" title="Hint credits"><span class="chip-ico">◈</span><b id="credits">0</b></div>
+    </section>
+
+    <nav class="modes">
+      <button class="mode-btn" data-mode="daily">DAILY<span class="streak" id="streak-badge"></span></button>
+      <button class="mode-btn" data-mode="endless">ENDLESS</button>
+      <div class="lens" id="lens">
+        <button class="len-btn" data-len="4">4</button>
+        <button class="len-btn" data-len="5">5</button>
+        <button class="len-btn" data-len="6">6</button>
+        <button class="len-btn" data-len="7">7</button>
+      </div>
+    </nav>
+
+    <section class="intel" id="intel" aria-live="polite">
+      <div class="intel-line dim">&gt; uplink ready. crack the code.</div>
+    </section>
+
+    <main class="board-wrap">
+      <div class="board" id="board"></div>
+    </main>
+
+    <section class="hints" id="hints">
+      <button class="hint-btn" data-hint="burn"><span class="h-name">BURN</span><span class="h-cost">◈1</span></button>
+      <button class="hint-btn" data-hint="check"><span class="h-name">SCAN</span><span class="h-cost">◈1</span></button>
+      <button class="hint-btn" data-hint="reveal"><span class="h-name">REVEAL</span><span class="h-cost">◈2</span></button>
+      <button class="hint-btn" data-hint="clue"><span class="h-name">CLUE</span><span class="h-cost">◈2</span></button>
+    </section>
+
+    <section class="keyboard" id="keyboard"></section>
+  </div>
+
+  <div class="toasts" id="toasts"></div>
+
+  <!-- Modal -->
+  <div class="modal-back" id="modal-back" hidden>
+    <div class="modal" role="dialog" aria-modal="true">
+      <button class="modal-x" id="modal-x" aria-label="Close">✕</button>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+
+  <script src="words.js"></script>
+  <script src="audio.js"></script>
+  <script src="bg.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
