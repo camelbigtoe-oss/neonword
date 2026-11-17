@@ -95,9 +95,9 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .icon-btn:hover { color: var(--c1); }
 .icon-btn[hidden] { display: none; }
 @media (max-width: 400px) {
-  .icon-btn { width: 32px; height: 32px; font-size: 11px; }
-  .top-right { gap: 5px; }
-  .logo { font-size: 15px; letter-spacing: 1px; }
+  .top .icon-btn { width: 30px; height: 30px; font-size: 11px; }
+  .top .top-right { gap: 5px; }
+  .top .logo { font-size: 13px; letter-spacing: 1px; }
 }
 .icon-btn:active { transform: translateY(2px); }
 .icon-btn.off { opacity: .4; }
@@ -360,6 +360,27 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .theme-lock { font-size: 15px; color: var(--dim); }
 .ex-row { display: flex; gap: 4px; margin: 8px 0 4px; --tile: 34px; }
 .ex-row .tile { font-size: 13px; }
+.hist-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.hist-tabs .len-btn { padding: 6px 7px; font-size: 9px; }
+.hist-sum { margin-bottom: 12px; }
+.hist-sum b { font-size: 14px; }
+.hist-list { display: flex; flex-direction: column; gap: 6px; }
+.hist-row {
+  border: 0; text-align: left; padding: 8px; background: var(--panel);
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px;
+  box-shadow: -3px 0 0 0 var(--hit);
+}
+.hist-row.lost { box-shadow: -3px 0 0 0 var(--burn); }
+.hist-word { display: flex; gap: 2px; }
+.hist-word i {
+  font-style: normal; font-family: "Press Start 2P", monospace; font-size: 10px;
+  width: 18px; height: 18px; display: flex; align-items: center; justify-content: center;
+  background: var(--hit); color: var(--bg);
+}
+.hist-row.lost .hist-word i { background: var(--miss); color: var(--burn); }
+.hist-meta { font-size: 16px; color: var(--dim); margin-left: auto; }
+.hist-clue { display: none; width: 100%; font-size: 17px; color: var(--near); }
+.hist-row.open .hist-clue { display: block; }
 kbd { font-family: "Press Start 2P", monospace; font-size: 10px; color: var(--c2); }
 
 .levelup {

@@ -24,6 +24,7 @@
     daily: { streak: 0, best: 0, lastWin: null },
     recent: { 4: [], 5: [], 6: [], 7: [] },
     games: { daily: null, endless: {} },
+    history: [], // finished games, newest last
   });
   let P = load(STORE_KEY, defaults());
   P = Object.assign(defaults(), P);
@@ -524,6 +525,11 @@
     P.credits += credits;
     const after = levelInfo(P.xp).lvl;
     G.reward = { xp, credits, bonus };
+    P.history.push({
+      w: G.answer, c: G.clue, len: G.len, mode: G.mode, won, n: G.guesses.length,
+      rows: G.rows, hints: G.hints, xp, t: Date.now(),
+    });
+    if (P.history.length > 2000) P.history = P.history.slice(-2000);
     save();
     return { before, after };
   }
@@ -628,6 +634,35 @@
     }
   }
 
+  function showHistory(filter = "all") {
+    const all = P.history.slice().reverse();
+    const list = all.filter((h) =>
+      filter === "all" ? true : filter === "daily" ? h.mode === "daily" : h.mode === "endless" && h.len === +filter);
+    const solved = list.filter((h) => h.won).length;
+    const avg = solved ? (list.filter((h) => h.won).reduce((s, h) => s + h.n, 0) / solved).toFixed(1) : "-";
+    const tabs = ["all", "daily", "4", "5", "6", "7"];
+    const fmt = (t) => new Date(t).toLocaleDateString(undefined, { day: "numeric", month: "short" });
+    openModal(`
+      <h2>CODE LOG</h2>
+      <div class="hist-tabs">${tabs.map((t) => `<button class="len-btn ${t === filter ? "on" : ""}" data-f="${t}">${t.toUpperCase()}</button>`).join("")}</div>
+      <div class="stat-grid hist-sum">
+        <div><b>${list.length}</b><span>played</span></div>
+        <div><b>${solved}</b><span>cracked</span></div>
+        <div><b>${list.length - solved}</b><span>locked out</span></div>
+        <div><b>${avg}</b><span>avg guesses</span></div>
+      </div>
+      <div class="hist-list">
+        ${list.length ? list.map((h) => `
+          <button class="hist-row ${h.won ? "won" : "lost"}">
+            <span class="hist-word">${h.w.split("").map((ch) => `<i>${ch}</i>`).join("")}</span>
+            <span class="hist-meta">${h.won ? `${h.n}/${h.rows}` : "X"}${h.hints ? ` ◈${h.hints}` : ""} · ${h.mode === "daily" ? "DAILY · " : ""}${fmt(h.t)}</span>
+            <span class="hist-clue">"${h.c}"</span>
+          </button>`).join("") : `<p style="color:var(--dim)">No codes here yet. Go crack some.</p>`}
+      </div>`);
+    $$(".hist-tabs .len-btn").forEach((b) => (b.onclick = () => { SFX.click(); showHistory(b.dataset.f); }));
+    $$(".hist-row").forEach((r) => (r.onclick = () => r.classList.toggle("open")));
+  }
+
   function showStats() {
     const S = P.stats, L = levelInfo(P.xp);
     openModal(`
@@ -715,6 +750,7 @@
   }));
   $("#btn-help").onclick = () => { SFX.init(); SFX.click(); showHelp(); };
   $("#btn-stats").onclick = () => { SFX.init(); SFX.click(); showStats(); };
+  $("#btn-history").onclick = () => { SFX.init(); SFX.click(); showHistory(P.mode === "endless" ? String(P.len) : "daily"); };
   $("#btn-themes").onclick = () => { SFX.init(); SFX.click(); showThemes(); };
   $("#btn-sound").onclick = () => {
     SFX.init();
@@ -772,6 +808,9 @@
     if (fsEl()) fsExit && fsExit.call(document);
     else enterFullscreen();
   };
+
+  // Ask the browser not to auto-clear this site's saved data when storage runs low.
+  try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch {}
 
   // ---------- boot ----------
   startMode(P.mode, P.len);
