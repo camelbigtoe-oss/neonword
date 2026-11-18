@@ -2,7 +2,7 @@
 (() => {
   "use strict";
   // Shown at the bottom of the help screen. Bump together with VERSION in sw.js.
-  const APP_VERSION = 12;
+  const APP_VERSION = 13;
 
   // ---------- config ----------
   const STORE_KEY = "neonword.v1";
@@ -122,7 +122,7 @@
     if (G.status !== "play" && !G.rewarded) applyRewards(G.status === "won");
     save();
     renderAll();
-    if (G.status !== "play") setTimeout(showResult, 300);
+    if (G.status !== "play" && document.body.dataset.game === "word") setTimeout(showResult, 300);
   }
 
   // ---------- rendering ----------
@@ -575,7 +575,7 @@
     setTimeout(showResult, 1800);
   }
 
-  function levelUp(lvl) {
+  function levelUp(lvl, then = showResult) {
     SFX.levelUp();
     const unlock = THEMES.find((t) => t.lvl === lvl);
     const el = document.createElement("div");
@@ -584,7 +584,7 @@
     if (!unlock) { P.credits += 1; save(); renderHud(); }
     document.body.appendChild(el);
     BG.confetti([getVar("--near"), getVar("--c1"), "#ffffff"]);
-    setTimeout(() => { el.remove(); showResult(); }, 2400);
+    setTimeout(() => { el.remove(); then(); }, 2400);
   }
 
   function shareText() {
@@ -608,7 +608,7 @@
   }
 
   function showResult() {
-    if (!G || G.status === "play") return;
+    if (!G || G.status === "play" || document.body.dataset.game !== "word") return;
     const won = G.status === "won";
     const r = G.reward || { xp: 0, credits: 0 };
     openModal(`
@@ -792,6 +792,7 @@
       document.querySelector('meta[name="theme-color"]').content = getVar("--bg");
       BG.rebuild();
       SFX.coin();
+      renderMenu();
       showThemes();
     }));
   }
@@ -858,8 +859,8 @@
       $("#r-sfx").classList.toggle("alt", !P.sound);
     };
   }
-  $("#btn-sound").onclick = () => { SFX.init(); SFX.click(); showRadio(); };
-  Radio.onChange(({ playing }) => $("#btn-sound").classList.toggle("playing", playing));
+  $$("#btn-sound, #l-sound, #m-sound").forEach((b) => (b.onclick = () => { SFX.init(); SFX.click(); showRadio(); }));
+  Radio.onChange(({ playing }) => $$("#btn-sound, #l-sound, #m-sound").forEach((b) => b.classList.toggle("playing", playing)));
   // drop focus after clicks so Enter on the keyboard never re-clicks a button
   document.addEventListener("click", (e) => e.target.closest("button")?.blur());
   $("#modal-x").onclick = closeModal;
@@ -869,8 +870,10 @@
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     if (e.key === "Escape") {
       if (!$("#modal-back").hidden) return closeModal();
+      if (document.body.dataset.game !== "word") return;
       return press("ESC");
     }
+    if (document.body.dataset.game !== "word") return;
     if (!$("#modal-back").hidden) return;
     let k = null;
     if (e.key === "Enter") k = "ENTER";
@@ -922,10 +925,60 @@
   // Ask the browser not to auto-clear this site's saved data when storage runs low.
   try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch {}
 
+  // ---------- game menu ----------
+  // Shared api for the other games (links.js).
+  function spend(c) {
+    if (P.credits < c) { SFX.error(); toast(`NEED ◈${c} — WIN TO EARN MORE`); return false; }
+    P.credits -= c;
+    save();
+    $$(".credits").forEach((el) => { el.classList.remove("bump"); void el.offsetWidth; el.classList.add("bump"); });
+    return true;
+  }
+  function reward(xp, credits) {
+    const before = levelInfo(P.xp).lvl;
+    P.xp += xp;
+    P.credits += credits;
+    save();
+    return { before, after: levelInfo(P.xp).lvl };
+  }
+  const NW = {
+    get P() { return P; }, save, toast, openModal, closeModal, spend, reward, levelUp, levelInfo,
+    dateKey, yesterdayKey, nextDailyIn, seededShuffle, getVar, SFX, BG, APP_VERSION,
+  };
+  Links.setApi(NW);
+
+  function renderMenu() {
+    const L = levelInfo(P.xp);
+    $("#m-lvl").textContent = L.lvl;
+    $("#m-credits").textContent = P.credits;
+    const g = P.games.daily;
+    $("#m-word").textContent = !g || g.date !== dateKey() || g.status === "play"
+      ? (g && g.date === dateKey() && g.guesses.length ? "DAILY IN PROGRESS" : "DAILY READY")
+      : g.status === "won" ? "DAILY ✓ CRACKED" : "DAILY ✗ LOCKED OUT";
+    $("#m-links").textContent = Links.dailyStatus(P);
+  }
+
+  function showGame(game) {
+    if (busy) return;
+    closeModal();
+    document.body.dataset.game = game;
+    BG.setMode(game === "links" ? "grid" : "city");
+    document.querySelector('meta[name="theme-color"]').content = getVar("--bg");
+    if (game === "menu") renderMenu();
+    else if (game === "word") {
+      startMode(P.mode, P.len);
+      fitBoard();
+      if (!P.seenHelp) setTimeout(showHelp, 300);
+    } else if (game === "links") Links.enter(NW);
+  }
+  $$(".cart").forEach((b) => b.addEventListener("click", () => { SFX.init(); SFX.coin(); showGame(b.dataset.go); }));
+  $$(".btn-home").forEach((b) => b.addEventListener("click", () => { SFX.init(); SFX.click(); showGame("menu"); }));
+  $("#m-themes").onclick = () => { SFX.init(); SFX.click(); showThemes(); };
+  $("#m-backup").onclick = () => { SFX.init(); SFX.click(); showBackup(); };
+
   // ---------- boot ----------
   startMode(P.mode, P.len);
-  document.querySelector('meta[name="theme-color"]').content = getVar("--bg");
-  if (!P.seenHelp) setTimeout(showHelp, 400);
+  showGame("menu");
 
   if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
     const hadController = !!navigator.serviceWorker.controller;

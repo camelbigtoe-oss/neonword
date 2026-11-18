@@ -16,14 +16,17 @@
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
-<body data-theme="neon">
+<body data-theme="neon" data-game="menu">
   <canvas id="bg" aria-hidden="true"></canvas>
   <canvas id="fx" aria-hidden="true"></canvas>
   <div class="scanlines" aria-hidden="true"></div>
 
   <div id="app">
     <header class="top">
-      <button class="icon-btn" id="btn-help" aria-label="How to play">?</button>
+      <div class="top-left">
+        <button class="icon-btn btn-home" aria-label="Game menu"><svg viewBox="0 0 7 7" width="14" height="14" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="M3 0h1v1h1v1h1v1h1v1h-1v3h-2v-2h-1v2h-2v-3h-1v-1h1v-1h1v-1h1z"/></svg></button>
+        <button class="icon-btn" id="btn-help" aria-label="How to play">?</button>
+      </div>
       <div class="logo" data-text="NEONWORD">NEONWORD</div>
       <div class="top-right">
         <button class="icon-btn" id="btn-full" aria-label="Fullscreen" hidden>⛶</button>
@@ -72,6 +75,80 @@
     <section class="keyboard" id="keyboard"></section>
   </div>
 
+  <!-- Game picker -->
+  <div id="menu">
+    <div class="menu-head">
+      <div class="logo menu-logo" data-text="NEON ARCADE">NEON ARCADE</div>
+      <p class="menu-sub">&gt; insert cartridge_</p>
+      <div class="menu-hud"><span>LV <b id="m-lvl">1</b></span><span class="m-cr">◈<b id="m-credits">0</b></span></div>
+    </div>
+    <div class="carts">
+      <button class="cart" data-go="word">
+        <div class="cart-art"><i class="tile hit">N</i><i class="tile near">E</i><i class="tile miss">O</i><i class="tile hit">N</i></div>
+        <div class="cart-title">NEONWORD</div>
+        <div class="cart-desc">Crack the hidden code word in six tries.</div>
+        <div class="cart-status" id="m-word"></div>
+      </button>
+      <button class="cart links-pal" data-go="links">
+        <div class="cart-art grid4"><i class="g0"></i><i class="g0"></i><i class="g1"></i><i class="g1"></i><i class="g2"></i><i class="g2"></i><i class="g3"></i><i class="g3"></i></div>
+        <div class="cart-title">NEONLINK</div>
+        <div class="cart-desc">Sort 16 words into 4 secret links.</div>
+        <div class="cart-status" id="m-links"></div>
+      </button>
+    </div>
+    <div class="menu-foot">
+      <button class="icon-btn" id="m-sound" aria-label="Radio and sound"><span class="note">♪</span><span class="mini-eq"><i></i><i></i><i></i></span></button>
+      <button class="icon-btn" id="m-themes" aria-label="Themes">◆</button>
+      <button class="icon-btn" id="m-backup" aria-label="Backup">▤</button>
+    </div>
+  </div>
+
+  <!-- NEONLINK -->
+  <div id="links">
+    <header class="top">
+      <div class="top-left">
+        <button class="icon-btn btn-home" aria-label="Game menu"><svg viewBox="0 0 7 7" width="14" height="14" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="M3 0h1v1h1v1h1v1h1v1h-1v3h-2v-2h-1v2h-2v-3h-1v-1h1v-1h1v-1h1z"/></svg></button>
+        <button class="icon-btn" id="l-help" aria-label="How to play">?</button>
+      </div>
+      <div class="logo" data-text="NEONLINK">NEONLINK</div>
+      <div class="top-right">
+        <button class="icon-btn" id="l-sound" aria-label="Radio and sound"><span class="note">♪</span><span class="mini-eq"><i></i><i></i><i></i></span></button>
+        <button class="icon-btn" id="l-stats" aria-label="Stats">▤</button>
+      </div>
+    </header>
+
+    <section class="hud">
+      <div class="lvl">
+        <span class="lvl-label">LV <b id="l-lvl">1</b></span>
+        <div class="xpbar"><div class="xpfill" id="l-xpfill"></div></div>
+        <span class="xp-txt" id="l-xptxt">0/100</span>
+      </div>
+      <div class="credits" title="Hint credits"><span class="chip-ico">◈</span><b id="l-credits">0</b></div>
+    </section>
+
+    <nav class="modes">
+      <button class="mode-btn" data-lmode="daily">DAILY<span class="streak" id="l-streak"></span></button>
+      <button class="mode-btn" data-lmode="endless">ENDLESS</button>
+      <div class="l-lives" id="l-lives"></div>
+    </nav>
+
+    <section class="intel" id="l-intel" aria-live="polite"></section>
+
+    <main class="l-board" id="l-board">
+      <div class="l-solved" id="l-solved"></div>
+      <div class="l-grid" id="l-grid"></div>
+    </main>
+
+    <section class="hints l-hints">
+      <button class="hint-btn" data-act="pair"><span class="h-name">PAIR</span><span class="h-cost">◈1</span></button>
+      <button class="hint-btn" data-act="name"><span class="h-name">DECODE</span><span class="h-cost">◈2</span></button>
+      <button class="hint-btn" data-act="shuffle"><span class="h-name">SHUFFLE</span><span class="h-cost">free</span></button>
+      <button class="hint-btn" data-act="clear"><span class="h-name">CLEAR</span><span class="h-cost">free</span></button>
+    </section>
+
+    <button class="l-submit" id="l-submit">SUBMIT 0/4</button>
+  </div>
+
   <div class="toasts" id="toasts"></div>
 
   <!-- Modal -->
@@ -86,6 +163,8 @@
   <script src="audio.js"></script>
   <script src="radio.js"></script>
   <script src="bg.js"></script>
+  <script src="links-data.js"></script>
+  <script src="links.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

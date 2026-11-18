@@ -18,7 +18,9 @@ Host the folder on any static host (GitHub Pages, Netlify, Cloudflare Pages). Op
 
 - `index.html` – layout
 - `style.css` – pixel UI and the 6 themes
-- `app.js` – game rules, hints, XP, credits, stats
+- `app.js` – NEONWORD rules, hints, XP, credits, stats, and the game menu
+- `links.js` – NEONLINK: sort 16 words into 4 hidden groups (shares level and credits)
+- `links-data.js` – NEONLINK puzzles (edit to add more)
 - `words.js` – answer words and their clues (edit to add more)
 - `bg.js` – animated pixel city background and particles
 - `audio.js` – chiptune sound effects (WebAudio)

@@ -8,6 +8,8 @@ const BG = (() => {
   const fx = fxc.getContext("2d");
   let W = 0, H = 0, sky = null, layers = [], drops = [], cars = [], parts = [];
   let C = {};
+  let mode = "city";   // "city" (NEONWORD) or "grid" (NEONLINK: synthwave floor + mountains)
+  let floor = null;
   let seed = 1;
   const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -136,6 +138,78 @@ const BG = (() => {
     layers = [buildLayer(0), buildLayer(1), buildLayer(2)];
     drops = Array.from({ length: Math.floor(W * 0.5) }, () => ({ x: Math.random() * W, y: Math.random() * H, v: 2 + Math.random() * 2, l: 2 + Math.floor(Math.random() * 3) }));
     cars = Array.from({ length: 5 }, () => newCar(true));
+    if (mode === "grid") buildGrid();
+  }
+
+  function setMode(m) { mode = m; rebuild(); }
+
+  // Grid mode: jagged mountains on the sky, and a static floor with lines running to the sun.
+  function buildGrid() {
+    const s = sky.getContext("2d");
+    const hz = Math.floor(H * 0.62);
+    seed = 99 + W;
+    for (const [k, col, amp] of [[0, mix(C.sky2, C.bg, 0.35), 0.22], [1, mix(C.sky1, C.bg, 0.5), 0.13]]) {
+      let y = hz - H * amp * 0.5;
+      for (let x = 0; x < W; x++) {
+        y += (rnd() - 0.5) * 3 + ((hz - H * amp * (0.4 + 0.6 * Math.abs(Math.sin(x / (W * (0.11 + k * 0.07)))))) - y) * 0.08;
+        s.fillStyle = col;
+        s.fillRect(x, Math.floor(y), 1, hz - Math.floor(y));
+        if (k === 0 && x % 2 === 0) { s.fillStyle = C.c2; s.globalAlpha = 0.5; s.fillRect(x, Math.floor(y), 1, 1); s.globalAlpha = 1; }
+      }
+    }
+    floor = document.createElement("canvas");
+    floor.width = W; floor.height = H - hz;
+    const f = floor.getContext("2d");
+    const fh = floor.height;
+    for (let y = 0; y < fh; y++) {
+      f.fillStyle = mix(C.bg, C.sky2, Math.max(0, 0.45 - y / fh));
+      f.fillRect(0, y, W, 1);
+    }
+    f.fillStyle = C.c2;
+    for (let k = -24; k <= 24; k++) {
+      for (let y = 0; y < fh; y++) {
+        const t = y / fh;
+        f.globalAlpha = 0.25 + 0.55 * t;
+        f.fillRect(Math.floor(W / 2 + k * (3 + t * W / 7)), y, 1, 1);
+      }
+    }
+    f.globalAlpha = 1;
+  }
+
+  function drawGrid(t) {
+    const hz = Math.floor(H * 0.62), fh = H - hz;
+    ctx.drawImage(sky, 0, 0);
+    ctx.drawImage(floor, 0, hz);
+    // horizon glow
+    ctx.fillStyle = C.c1;
+    ctx.fillRect(0, hz, W, 1);
+    ctx.globalAlpha = 0.3;
+    ctx.fillRect(0, hz - 1, W, 1);
+    ctx.fillRect(0, hz + 1, W, 1);
+    // horizontal lines rolling toward the viewer
+    const ph = reduced ? 0 : (t / 1400) % 1;
+    ctx.fillStyle = C.c2;
+    for (let i = 0; i < 26; i++) {
+      const z = i + 1 - ph;
+      const y = hz + Math.floor(fh * 1.4 / (z + 0.4));
+      if (y >= H || y <= hz) continue;
+      ctx.globalAlpha = Math.min(0.9, ((y - hz) / fh) * 2.2);
+      ctx.fillRect(0, y, W, 1);
+    }
+    ctx.globalAlpha = 1;
+    // floating data motes
+    if (!reduced) {
+      for (const d of drops.slice(0, 40)) {
+        d.y -= d.v * 0.12; d.x += Math.sin((t / 900) + d.l) * 0.1;
+        if (d.y < 0) { d.y = hz; d.x = Math.random() * W; }
+        ctx.fillStyle = d.l > 3 ? C.c1 : C.near;
+        ctx.globalAlpha = 0.5;
+        ctx.fillRect(Math.floor(d.x), Math.floor(d.y), 1, 1);
+      }
+      ctx.globalAlpha = 1;
+    }
+    ctx.fillStyle = "rgba(0,0,0,0.3)";
+    ctx.fillRect(0, 0, W, H);
   }
 
   function newCar(anywhere) {
@@ -178,6 +252,7 @@ const BG = (() => {
   }
 
   function frame(t) {
+    if (mode === "grid") { drawGrid(t); drawParts(); requestAnimationFrame(frame); return; }
     ctx.drawImage(sky, 0, 0);
     drawLayer(layers[0], t);
     // cars between far and mid
@@ -213,7 +288,12 @@ const BG = (() => {
     ctx.fillStyle = "rgba(0,0,0,0.35)";
     ctx.fillRect(0, 0, W, H);
 
-    // particles on fx canvas
+    drawParts();
+    requestAnimationFrame(frame);
+  }
+
+  // particles on fx canvas
+  function drawParts() {
     fx.clearRect(0, 0, W, H);
     for (let i = parts.length - 1; i >= 0; i--) {
       const p = parts[i];
@@ -222,7 +302,6 @@ const BG = (() => {
       fx.fillStyle = p.col;
       fx.fillRect(Math.floor(p.x), Math.floor(p.y), p.s, p.s);
     }
-    requestAnimationFrame(frame);
   }
 
   function burst(px, py, colors, n = 60) {
@@ -240,5 +319,5 @@ const BG = (() => {
   addEventListener("resize", () => { clearTimeout(resize.t); resize.t = setTimeout(resize, 150); });
   resize();
   requestAnimationFrame(frame);
-  return { rebuild, burst, confetti };
+  return { rebuild, setMode, burst, confetti };
 })();
