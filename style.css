@@ -474,8 +474,22 @@ kbd { font-family: "Press Start 2P", monospace; font-size: 10px; color: var(--c2
   .hint-btn { padding: 4px 2px; }
   .modes .mode-btn, .len-btn { padding: 6px 8px; }
 }
-/* ============ LANDSCAPE: board on the left, controls on the right ============ */
-@media (orientation: landscape) and (max-height: 820px) {
+/* ============ LANDSCAPE ============ */
+/* Roomy landscape (e.g. a Fold's inner screen on its side): same stacked layout as
+   portrait, just wider, with the keyboard spanning the whole column. */
+@media (orientation: landscape) and (min-height: 521px) {
+  #app {
+    max-width: min(100vw, 960px);
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
+  }
+  .keyboard { width: 100%; }
+  .key { height: clamp(44px, 6.4dvh, 58px); font-size: 14px; }
+  .key.wide { font-size: 11px; }
+}
+/* Very short landscape (e.g. a folded phone on its side): too short to stack,
+   so the board goes on the left and the controls on the right. */
+@media (orientation: landscape) and (max-height: 520px) {
   #app {
     max-width: 1200px;
     display: grid;
