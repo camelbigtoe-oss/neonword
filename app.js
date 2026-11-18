@@ -129,7 +129,6 @@
     $$(".mode-btn").forEach((b) => b.classList.toggle("on", b.dataset.mode === P.mode));
     $$(".len-btn").forEach((b) => b.classList.toggle("on", +b.dataset.len === G.len));
     $("#lens").classList.toggle("hidden", P.mode === "daily");
-    $("#btn-sound").classList.toggle("off", !P.sound);
     SFX.enabled = P.sound;
     renderHud();
     renderBoard();
@@ -290,7 +289,7 @@
     $("#modal-body").innerHTML = html;
     $("#modal-back").hidden = false;
   }
-  function closeModal() { $("#modal-back").hidden = true; }
+  function closeModal() { $("#modal-back").hidden = true; Radio.unmount(); }
 
   // ---------- input ----------
   function press(k) {
@@ -839,15 +838,25 @@
   $("#btn-stats").onclick = () => { SFX.init(); SFX.click(); showStats(); };
   $("#btn-history").onclick = () => { SFX.init(); SFX.click(); showHistory(P.mode === "endless" ? String(P.len) : "daily"); };
   $("#btn-themes").onclick = () => { SFX.init(); SFX.click(); showThemes(); };
-  $("#btn-sound").onclick = () => {
-    SFX.init();
-    P.sound = !P.sound;
-    SFX.enabled = P.sound;
-    $("#btn-sound").classList.toggle("off", !P.sound);
-    save();
-    SFX.click();
-    toast(P.sound ? "SOUND ON" : "SOUND OFF");
-  };
+  // ♪ opens NEON RADIO (music player + sound effects switch)
+  function showRadio() {
+    openModal(`
+      <h2>NEON RADIO</h2>
+      <div id="radio-root"></div>
+      <h3>SOUND FX</h3>
+      <div class="btn-row" style="margin-top:0"><button class="btn ${P.sound ? "" : "alt"}" id="r-sfx" style="margin-top:0">SFX: ${P.sound ? "ON" : "OFF"}</button></div>`);
+    Radio.mount($("#radio-root"));
+    $("#r-sfx").onclick = () => {
+      P.sound = !P.sound;
+      SFX.enabled = P.sound;
+      save();
+      SFX.click();
+      $("#r-sfx").textContent = `SFX: ${P.sound ? "ON" : "OFF"}`;
+      $("#r-sfx").classList.toggle("alt", !P.sound);
+    };
+  }
+  $("#btn-sound").onclick = () => { SFX.init(); SFX.click(); showRadio(); };
+  Radio.onChange(({ playing }) => $("#btn-sound").classList.toggle("playing", playing));
   // drop focus after clicks so Enter on the keyboard never re-clicks a button
   document.addEventListener("click", (e) => e.target.closest("button")?.blur());
   $("#modal-x").onclick = closeModal;
