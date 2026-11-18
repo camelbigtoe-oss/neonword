@@ -8,7 +8,7 @@ const BG = (() => {
   const fx = fxc.getContext("2d");
   let W = 0, H = 0, sky = null, layers = [], drops = [], cars = [], parts = [];
   let C = {};
-  let mode = "city";   // "city" (NEONWORD) or "grid" (NEONLINK: synthwave floor + mountains)
+  let mode = "city";   // "city" (NEONWORD) or "grid" (NEONLINK: mountains + lake)
   let floor = null;
   let seed = 1;
   const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
@@ -143,7 +143,7 @@ const BG = (() => {
 
   function setMode(m) { mode = m; rebuild(); }
 
-  // Grid mode: jagged mountains on the sky, and a static floor with lines running to the sun.
+  // Grid mode (NEONLINK): jagged mountains on the sky over a calm reflecting lake.
   function buildGrid() {
     const s = sky.getContext("2d");
     const hz = Math.floor(H * 0.62);
@@ -157,22 +157,23 @@ const BG = (() => {
         if (k === 0 && x % 2 === 0) { s.fillStyle = C.c2; s.globalAlpha = 0.5; s.fillRect(x, Math.floor(y), 1, 1); s.globalAlpha = 1; }
       }
     }
+    // Calm lake: the sky, sun and mountains mirrored and darkened toward the viewer.
     floor = document.createElement("canvas");
     floor.width = W; floor.height = H - hz;
     const f = floor.getContext("2d");
     const fh = floor.height;
     for (let y = 0; y < fh; y++) {
-      f.fillStyle = mix(C.bg, C.sky2, Math.max(0, 0.45 - y / fh));
+      const src = Math.max(0, hz - 1 - Math.floor(y * 1.3));
+      f.drawImage(sky, 0, src, W, 1, 0, y, W, 1);
+      f.fillStyle = C.bg;
+      f.globalAlpha = Math.min(0.92, 0.35 + (y / fh) * 0.6);
       f.fillRect(0, y, W, 1);
+      f.globalAlpha = 1;
     }
-    f.fillStyle = C.c2;
-    for (let k = -24; k <= 24; k++) {
-      for (let y = 0; y < fh; y++) {
-        const t = y / fh;
-        f.globalAlpha = 0.25 + 0.55 * t;
-        f.fillRect(Math.floor(W / 2 + k * (3 + t * W / 7)), y, 1, 1);
-      }
-    }
+    // faint still ripple lines
+    f.fillStyle = C.bg;
+    f.globalAlpha = 0.35;
+    for (let y = 2; y < fh; y += 3 + Math.floor(y / 12)) f.fillRect(0, y, W, 1);
     f.globalAlpha = 1;
   }
 
@@ -186,15 +187,17 @@ const BG = (() => {
     ctx.globalAlpha = 0.3;
     ctx.fillRect(0, hz - 1, W, 1);
     ctx.fillRect(0, hz + 1, W, 1);
-    // horizontal lines rolling toward the viewer
-    const ph = reduced ? 0 : (t / 1400) % 1;
-    ctx.fillStyle = C.c2;
-    for (let i = 0; i < 26; i++) {
-      const z = i + 1 - ph;
-      const y = hz + Math.floor(fh * 1.4 / (z + 0.4));
-      if (y >= H || y <= hz) continue;
-      ctx.globalAlpha = Math.min(0.9, ((y - hz) / fh) * 2.2);
-      ctx.fillRect(0, y, W, 1);
+    // sun glints on the water: dashes under the sun that gently widen and shrink in place
+    const sx = Math.floor(W * 0.68), r = Math.floor(Math.min(W, H) * 0.2);
+    for (let i = 0; i < 14; i++) {
+      const y = hz + 2 + Math.floor(i * i * 0.35 + i * 2);
+      if (y >= H) break;
+      const wob = reduced ? 0 : Math.sin(t / 1600 + i * 1.7);
+      const w = Math.max(2, Math.floor(r * (0.9 - i * 0.04) * (0.75 + 0.25 * wob)));
+      const off = reduced ? 0 : Math.round(Math.sin(t / 2300 + i) * 2);
+      ctx.fillStyle = i % 3 === 0 ? C.c1 : C.near;
+      ctx.globalAlpha = 0.55 - i * 0.03;
+      ctx.fillRect(sx - (w >> 1) + off, y, w, 1);
     }
     ctx.globalAlpha = 1;
     // floating data motes
