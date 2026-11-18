@@ -2,7 +2,7 @@
 (() => {
   "use strict";
   // Shown at the bottom of the help screen. Bump together with VERSION in sw.js.
-  const APP_VERSION = 11;
+  const APP_VERSION = 12;
 
   // ---------- config ----------
   const STORE_KEY = "neonword.v1";
@@ -907,6 +907,17 @@
     if (fsEl()) fsExit && fsExit.call(document);
     else enterFullscreen();
   };
+
+  // Installed apps can keep an old "portrait only" setting for a while after the manifest
+  // changes. Unlocking from code lets the screen rotate straight away.
+  function unlockRotation() {
+    try {
+      const o = screen.orientation;
+      if (o && o.lock) o.lock("any").catch(() => { try { o.unlock(); } catch {} });
+    } catch {}
+  }
+  unlockRotation();
+  document.addEventListener("pointerdown", unlockRotation, { once: true, capture: true });
 
   // Ask the browser not to auto-clear this site's saved data when storage runs low.
   try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch {}
