@@ -1,6 +1,8 @@
 // NEONWORD — game logic
 (() => {
   "use strict";
+  // Shown at the bottom of the help screen. Bump together with VERSION in sw.js.
+  const APP_VERSION = 11;
 
   // ---------- config ----------
   const STORE_KEY = "neonword.v1";
@@ -812,7 +814,8 @@
       <p><kbd>CLUE</kbd> ◈2 — a short definition of the word.</p>
       <h3>REWARDS</h3>
       <p>Win to earn XP and ◈. Fewer guesses = more XP. Hints cut XP a little. Daily codes pay 1.5× XP, +◈1, and every 7-day streak pays ◈5. Level up to unlock themes.</p>
-      <div class="btn-row"><button class="btn" id="h-go">JACK IN</button></div>`);
+      <div class="btn-row"><button class="btn" id="h-go">JACK IN</button></div>
+      <p style="color:var(--dim);font-size:15px;margin-top:14px">build ${APP_VERSION}</p>`);
     $("#h-go").onclick = closeModal;
     P.seenHelp = true;
     save();
