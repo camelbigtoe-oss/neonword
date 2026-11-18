@@ -8,8 +8,8 @@ const BG = (() => {
   const fx = fxc.getContext("2d");
   let W = 0, H = 0, sky = null, layers = [], drops = [], cars = [], parts = [];
   let C = {};
-  let mode = "city";   // "city" (NEONWORD) or "grid" (NEONLINK: mountains + lake)
-  let floor = null;
+  let mode = "city";   // "city" (NEONWORD) or "grid" (NEONLINK: lake scene from lake.js)
+  let scene = "night";
   let seed = 1;
   const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -138,82 +138,10 @@ const BG = (() => {
     layers = [buildLayer(0), buildLayer(1), buildLayer(2)];
     drops = Array.from({ length: Math.floor(W * 0.5) }, () => ({ x: Math.random() * W, y: Math.random() * H, v: 2 + Math.random() * 2, l: 2 + Math.floor(Math.random() * 3) }));
     cars = Array.from({ length: 5 }, () => newCar(true));
-    if (mode === "grid") buildGrid();
+    if (mode === "grid") Lake.build(W, H, scene);
   }
 
-  function setMode(m) { mode = m; rebuild(); }
-
-  // Grid mode (NEONLINK): jagged mountains on the sky over a calm reflecting lake.
-  function buildGrid() {
-    const s = sky.getContext("2d");
-    const hz = Math.floor(H * 0.62);
-    seed = 99 + W;
-    for (const [k, col, amp] of [[0, mix(C.sky2, C.bg, 0.35), 0.22], [1, mix(C.sky1, C.bg, 0.5), 0.13]]) {
-      let y = hz - H * amp * 0.5;
-      for (let x = 0; x < W; x++) {
-        y += (rnd() - 0.5) * 3 + ((hz - H * amp * (0.4 + 0.6 * Math.abs(Math.sin(x / (W * (0.11 + k * 0.07)))))) - y) * 0.08;
-        s.fillStyle = col;
-        s.fillRect(x, Math.floor(y), 1, hz - Math.floor(y));
-        if (k === 0 && x % 2 === 0) { s.fillStyle = C.c2; s.globalAlpha = 0.5; s.fillRect(x, Math.floor(y), 1, 1); s.globalAlpha = 1; }
-      }
-    }
-    // Calm lake: the sky, sun and mountains mirrored and darkened toward the viewer.
-    floor = document.createElement("canvas");
-    floor.width = W; floor.height = H - hz;
-    const f = floor.getContext("2d");
-    const fh = floor.height;
-    for (let y = 0; y < fh; y++) {
-      const src = Math.max(0, hz - 1 - Math.floor(y * 1.3));
-      f.drawImage(sky, 0, src, W, 1, 0, y, W, 1);
-      f.fillStyle = C.bg;
-      f.globalAlpha = Math.min(0.92, 0.35 + (y / fh) * 0.6);
-      f.fillRect(0, y, W, 1);
-      f.globalAlpha = 1;
-    }
-    // faint still ripple lines
-    f.fillStyle = C.bg;
-    f.globalAlpha = 0.35;
-    for (let y = 2; y < fh; y += 3 + Math.floor(y / 12)) f.fillRect(0, y, W, 1);
-    f.globalAlpha = 1;
-  }
-
-  function drawGrid(t) {
-    const hz = Math.floor(H * 0.62), fh = H - hz;
-    ctx.drawImage(sky, 0, 0);
-    ctx.drawImage(floor, 0, hz);
-    // horizon glow
-    ctx.fillStyle = C.c1;
-    ctx.fillRect(0, hz, W, 1);
-    ctx.globalAlpha = 0.3;
-    ctx.fillRect(0, hz - 1, W, 1);
-    ctx.fillRect(0, hz + 1, W, 1);
-    // sun glints on the water: dashes under the sun that gently widen and shrink in place
-    const sx = Math.floor(W * 0.68), r = Math.floor(Math.min(W, H) * 0.2);
-    for (let i = 0; i < 14; i++) {
-      const y = hz + 2 + Math.floor(i * i * 0.35 + i * 2);
-      if (y >= H) break;
-      const wob = reduced ? 0 : Math.sin(t / 1600 + i * 1.7);
-      const w = Math.max(2, Math.floor(r * (0.9 - i * 0.04) * (0.75 + 0.25 * wob)));
-      const off = reduced ? 0 : Math.round(Math.sin(t / 2300 + i) * 2);
-      ctx.fillStyle = i % 3 === 0 ? C.c1 : C.near;
-      ctx.globalAlpha = 0.55 - i * 0.03;
-      ctx.fillRect(sx - (w >> 1) + off, y, w, 1);
-    }
-    ctx.globalAlpha = 1;
-    // floating data motes
-    if (!reduced) {
-      for (const d of drops.slice(0, 40)) {
-        d.y -= d.v * 0.12; d.x += Math.sin((t / 900) + d.l) * 0.1;
-        if (d.y < 0) { d.y = hz; d.x = Math.random() * W; }
-        ctx.fillStyle = d.l > 3 ? C.c1 : C.near;
-        ctx.globalAlpha = 0.5;
-        ctx.fillRect(Math.floor(d.x), Math.floor(d.y), 1, 1);
-      }
-      ctx.globalAlpha = 1;
-    }
-    ctx.fillStyle = "rgba(0,0,0,0.3)";
-    ctx.fillRect(0, 0, W, H);
-  }
+  function setMode(m, s) { mode = m; if (s) scene = s; rebuild(); }
 
   function newCar(anywhere) {
     const dir = Math.random() > 0.5 ? 1 : -1;
@@ -255,7 +183,7 @@ const BG = (() => {
   }
 
   function frame(t) {
-    if (mode === "grid") { drawGrid(t); drawParts(); requestAnimationFrame(frame); return; }
+    if (mode === "grid") { Lake.draw(ctx, t); drawParts(); requestAnimationFrame(frame); return; }
     ctx.drawImage(sky, 0, 0);
     drawLayer(layers[0], t);
     // cars between far and mid
@@ -322,5 +250,5 @@ const BG = (() => {
   addEventListener("resize", () => { clearTimeout(resize.t); resize.t = setTimeout(resize, 150); });
   resize();
   requestAnimationFrame(frame);
-  return { rebuild, setMode, burst, confetti };
+  return { rebuild, setMode, burst, confetti, SCENES: Lake.SCENES };
 })();

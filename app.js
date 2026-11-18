@@ -2,7 +2,7 @@
 (() => {
   "use strict";
   // Shown at the bottom of the help screen. Bump together with VERSION in sw.js.
-  const APP_VERSION = 14;
+  const APP_VERSION = 15;
 
   // ---------- config ----------
   const STORE_KEY = "neonword.v1";
@@ -578,9 +578,10 @@
   function levelUp(lvl, then = showResult) {
     SFX.levelUp();
     const unlock = THEMES.find((t) => t.lvl === lvl);
+    const scene = BG.SCENES.find((s) => s.lvl === lvl && s.lvl > 1);
     const el = document.createElement("div");
     el.className = "levelup";
-    el.innerHTML = `<div class="lu1">LEVEL ${lvl}</div><div class="lu2">${unlock ? `THEME UNLOCKED: ${unlock.name}` : "+1 CREDIT"}</div>`;
+    el.innerHTML = `<div class="lu1">LEVEL ${lvl}</div><div class="lu2">${unlock ? `THEME UNLOCKED: ${unlock.name}` : scene ? `LINK SCENE UNLOCKED: ${scene.name}` : "+1 CREDIT"}</div>`;
     if (!unlock) { P.credits += 1; save(); renderHud(); }
     document.body.appendChild(el);
     BG.confetti([getVar("--near"), getVar("--c1"), "#ffffff"]);
@@ -962,7 +963,7 @@
     if (busy) return;
     closeModal();
     document.body.dataset.game = game;
-    BG.setMode(game === "links" ? "grid" : "city");
+    BG.setMode(game === "links" ? "grid" : "city", Links.sceneFor(P));
     document.querySelector('meta[name="theme-color"]').content = getVar("--bg");
     if (game === "menu") renderMenu();
     else if (game === "word") {

@@ -15,7 +15,7 @@ const Links = (() => {
   let busy = false;
 
   const defaults = () => ({
-    mode: "daily", seenHelp: false,
+    mode: "daily", seenHelp: false, scene: "night",
     stats: { played: 0, won: 0, streak: 0, maxStreak: 0, dist: [0, 0, 0, 0, 0] }, // dist = wins by mistakes made
     daily: { streak: 0, best: 0, lastWin: null },
     games: { daily: null, endless: null },
@@ -489,6 +489,7 @@ const Links = (() => {
   }));
   $("#l-help").onclick = () => { NW.SFX.init(); NW.SFX.click(); showHelp(); };
   $("#l-stats").onclick = () => { NW.SFX.init(); NW.SFX.click(); showStats(); };
+  $("#l-scenes").onclick = () => { NW.SFX.init(); NW.SFX.click(); showScenes(); };
   addEventListener("keydown", (e) => {
     if (document.body.dataset.game !== "links" || !$("#modal-back").hidden) return;
     if (e.ctrlKey || e.metaKey || e.altKey) return;
@@ -497,6 +498,38 @@ const Links = (() => {
   });
   new ResizeObserver(() => fit()).observe($("#l-board"));
 
+  // ---------- scenes (backgrounds that unlock with level) ----------
+  // Picked scene, falling back to the first one if it is somehow locked (e.g. an old backup).
+  function sceneFor(P) {
+    const lvl = NW.levelInfo(P.xp).lvl;
+    const id = P.links && P.links.scene;
+    const s = BG.SCENES.find((x) => x.id === id);
+    return s && s.lvl <= lvl ? s.id : BG.SCENES[0].id;
+  }
+
+  function showScenes() {
+    const lvl = NW.levelInfo(NW.P.xp).lvl;
+    const cur = sceneFor(NW.P);
+    NW.openModal(`
+      <h2>LINK SCENES</h2>
+      <p style="color:var(--dim)">Level up to unlock new skies over the lake.</p>
+      <div class="theme-grid">
+        ${BG.SCENES.map((s) => `
+          <button class="theme-card ${cur === s.id ? "on" : ""}" data-scene="${s.id}" ${lvl < s.lvl ? "disabled" : ""}>
+            <div class="swatches">${[...s.sky, s.mtn[0]].map((c) => `<i style="background:${c}"></i>`).join("")}</div>
+            <span class="theme-name">${s.name}</span>
+            <span class="theme-lock">${lvl < s.lvl ? `🔒 LV ${s.lvl}` : cur === s.id ? "ACTIVE" : "TAP TO SET"}</span>
+          </button>`).join("")}
+      </div>`);
+    $$("[data-scene]").forEach((b) => (b.onclick = () => {
+      L.scene = b.dataset.scene;
+      save();
+      BG.setMode("grid", L.scene);
+      NW.SFX.coin();
+      showScenes();
+    }));
+  }
+
   // Daily status line for the game menu.
   function dailyStatus(P) {
     const g = P.links && P.links.games && P.links.games.daily;
@@ -504,5 +537,5 @@ const Links = (() => {
     return g.status === "won" ? "DAILY ✓ CLEARED" : "DAILY ✗ LOST";
   }
 
-  return { enter, dailyStatus, refreshHud: () => G && renderHud(), setApi: (api) => (NW = api) };
+  return { enter, dailyStatus, sceneFor, refreshHud: () => G && renderHud(), setApi: (api) => (NW = api) };
 })();
