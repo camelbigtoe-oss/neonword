@@ -34,22 +34,51 @@ const Links = (() => {
   const save = () => NW.save();
 
   // ---------- setup ----------
+  // ---------- no-repeat puzzle picking ----------
+  // L.seen lists every puzzle id you've been given (daily and endless share it).
+  // New games only pick unseen puzzles. When all are used, a new cycle starts with
+  // the most recent 30% still blocked so nothing repeats right away.
+  function seenIds() {
+    if (!Array.isArray(L.seen)) {
+      // first run after this update: rebuild from what's already been played
+      const s = new Set();
+      (L.history || []).forEach((h) => s.add(h.id));
+      (L.recent || []).forEach((i) => s.add(i));
+      if (L.games && L.games.daily) s.add(L.games.daily.id);
+      if (L.games && L.games.endless) s.add(L.games.endless.id);
+      L.seen = [...s].filter((i) => Number.isInteger(i) && i < LINK_PUZZLES.length);
+    }
+    return L.seen;
+  }
+  function unseenIds() {
+    const all = [...LINK_PUZZLES.keys()];
+    let seen = new Set(seenIds());
+    let pool = all.filter((i) => !seen.has(i));
+    if (!pool.length) {
+      L.seen = L.seen.slice(-Math.floor(LINK_PUZZLES.length * 0.3));
+      seen = new Set(L.seen);
+      pool = all.filter((i) => !seen.has(i));
+    }
+    return pool;
+  }
+
+  // Daily: a fixed order walked by date, skipping puzzles you've already had.
   function dailyId(key) {
     const n = LINK_PUZZLES.length;
+    const pool = new Set(unseenIds());
     const days = Math.round((Date.parse(key) - Date.parse("2026-01-01")) / 864e5);
     const order = NW.seededShuffle(n, 4242);
-    return order[((days % n) + n) % n];
+    const start = ((days % n) + n) % n;
+    for (let k = 0; k < n; k++) {
+      const id = order[(start + k) % n];
+      if (pool.has(id)) return id;
+    }
+    return order[start];
   }
 
   function freshGame(mode) {
-    let id;
-    if (mode === "daily") id = dailyId(NW.dateKey());
-    else {
-      const all = [...LINK_PUZZLES.keys()];
-      const pool = all.filter((i) => !L.recent.includes(i));
-      id = pick(pool.length ? pool : all);
-      L.recent = [...L.recent, id].slice(-Math.floor(LINK_PUZZLES.length * 0.7));
-    }
+    const id = mode === "daily" ? dailyId(NW.dateKey()) : pick(unseenIds());
+    if (!seenIds().includes(id)) L.seen.push(id);
     return {
       mode, id, date: NW.dateKey(), order: shuffle(LINK_PUZZLES[id].flatMap((g) => g.w)),
       solved: [], given: [], sel: [], tries: [], mistakes: 0, status: "play",
