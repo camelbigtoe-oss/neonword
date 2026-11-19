@@ -14,7 +14,7 @@ const Trace = (() => {
   let sel = [], dragging = false, moved = false, pendingSubmit = false, checking = false;
 
   const defaults = () => ({
-    mode: "daily", seenHelp: false,
+    mode: "daily", seenHelp: false, sector: "deep",
     stats: { played: 0, won: 0, streak: 0, maxStreak: 0, clean: 0 },
     daily: { streak: 0, best: 0, lastWin: null },
     games: { daily: null, endless: null },
@@ -414,7 +414,7 @@ const Trace = (() => {
       <h3>HINTS</h3>
       <p>Other real words of 4+ letters charge the meter. Every ${METER} fill a free <kbd>HINT</kbd>, which lights up the letters of one theme word. No charge? A hint costs ◈${HINT_COST}.</p>
       <h3>REWARDS</h3>
-      <p>NEONTRACE has its own level. ◈ credits are shared across games. Fewer hints = more XP. Daily boards pay 1.5× XP and +◈1.</p>
+      <p>NEONTRACE has its own level, which unlocks new space sectors (◆) with their own colours. ◈ credits are shared across games. Fewer hints = more XP. Daily boards pay 1.5× XP and +◈1.</p>
       <div class="btn-row"><button class="btn" id="th-go">START TRACING</button></div>
       <p style="color:var(--dim);font-size:15px;margin-top:14px">build ${NW.APP_VERSION}</p>`);
     $("#th-go").onclick = NW.closeModal;
@@ -444,6 +444,50 @@ const Trace = (() => {
   });
   new ResizeObserver(fit).observe($("#t-wrap"));
 
+  // ---------- sectors (space backgrounds + colours that unlock with level) ----------
+  function sectorFor(P) {
+    const lvl = NW.levelInfo((P.lv && P.lv.trace) || 0).lvl;
+    const s = BG.SECTORS.find((x) => x.id === (P.trace && P.trace.sector));
+    return s && s.lvl <= lvl ? s.id : BG.SECTORS[0].id;
+  }
+
+  // NEONTRACE's colours follow the picked sector; cleared when you leave the game
+  function paint(on) {
+    const st = document.body.style;
+    const all = new Set(BG.SECTORS.flatMap((s) => Object.keys(s.ui)));
+    all.forEach((k) => st.removeProperty(k));
+    if (!on || !NW) return;
+    const s = BG.SECTORS.find((x) => x.id === sectorFor(NW.P));
+    for (const [k, v] of Object.entries(s.ui)) st.setProperty(k, v);
+  }
+
+  function showSectors() {
+    const lvl = NW.levelInfo(NW.P.lv.trace).lvl;
+    const cur = sectorFor(NW.P);
+    NW.openModal(`
+      <h2>SECTORS</h2>
+      <p style="color:var(--dim)">Level up in NEONTRACE to travel further out. Each sector has its own sky and colours.</p>
+      <div class="theme-grid">
+        ${BG.SECTORS.map((s) => `
+          <button class="theme-card ${cur === s.id ? "on" : ""}" data-sector="${s.id}" ${lvl < s.lvl ? "disabled" : ""}>
+            <div class="swatches">${[s.ui["--c1"], s.ui["--c2"], s.ui["--near"], s.sky[2]].map((c) => `<i style="background:${c}"></i>`).join("")}</div>
+            <span class="theme-name">${s.name}</span>
+            <span class="theme-lock">${lvl < s.lvl ? `🔒 LV ${s.lvl}` : cur === s.id ? "ACTIVE" : "TAP TO WARP"}</span>
+          </button>`).join("")}
+      </div>`);
+    $$("[data-sector]").forEach((b) => (b.onclick = () => {
+      T.sector = b.dataset.sector;
+      save();
+      paint(true);
+      BG.setMode("space", T.sector);
+      document.querySelector('meta[name="theme-color"]').content = NW.getVar("--bg");
+      NW.SFX.coin();
+      showSectors();
+      if (G) renderBoard();
+    }));
+  }
+  $("#t-sectors").onclick = () => { NW.SFX.init(); NW.SFX.click(); showSectors(); };
+
   function dailyStatus(P) {
     const g = P.trace && P.trace.games && P.trace.games.daily;
     if (!g || g.date !== NW.dateKey()) return "DAILY READY";
@@ -451,5 +495,5 @@ const Trace = (() => {
     return g.found.length ? `DAILY ${g.found.length}/${TRACE_PUZZLES[g.id].words.length}` : "DAILY READY";
   }
 
-  return { enter, dailyStatus, setApi: (api) => (NW = api), refreshHud: () => G && renderHud() };
+  return { enter, dailyStatus, sectorFor, paint, setApi: (api) => (NW = api), refreshHud: () => G && renderHud() };
 })();

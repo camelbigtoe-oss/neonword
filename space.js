@@ -1,6 +1,30 @@
 // NEONTRACE backdrop: deep space. Drifting star layers, nebula clouds, a ringed planet
 // with a small moon, shooting stars and the odd satellite. Drawn by bg.js in "space" mode.
 const Space = (() => {
+  // Sectors unlock with the NEONTRACE level. Each sets the sky, nebula, planet and the
+  // game's own colours (ui: CSS variables applied while NEONTRACE is open).
+  const SECTORS = [
+    { id: "deep", name: "DEEP SPACE", lvl: 1, sky: ["#02030a", "#0a0f2e", "#1c0f3a"], neb: ["#ff5a7a", "#7af0ff", "#9a5bff", "#ff5a7a"],
+      bands: ["#3a1f5c", "#5a2a6e", "#ff5a7a", "#7a3a7a", "#2e1d50", "#c8506e", "#45286a"], ring: ["#ffd2dc", "#c89ae8"], rim: "#7af0ff",
+      ui: { "--c1": "#ff5a7a", "--c2": "#7af0ff", "--near": "#ffd23f", "--bg": "#060818", "--bg2": "#0d1230", "--panel": "rgba(8, 12, 34, 0.86)", "--miss": "#1b2246", "--dim": "#7480b0" } },
+    { id: "mars", name: "RED PLANET", lvl: 2, sky: ["#070202", "#240b06", "#3e1610"], neb: ["#ff6a2a", "#ffb35a", "#a8301e", "#ff8a4a"],
+      bands: ["#8a3a1e", "#b8542a", "#6e2a16", "#c8683a", "#9a4424", "#d8804a", "#7a3018"], ring: [], rim: "#ffb35a",
+      ui: { "--c1": "#ff6a2a", "--c2": "#ffd08a", "--near": "#7affc8", "--bg": "#120604", "--bg2": "#2a0f08", "--panel": "rgba(30, 10, 6, 0.86)", "--miss": "#3a1810", "--dim": "#b07a64" } },
+    { id: "ice", name: "ICE GIANT", lvl: 4, sky: ["#01060c", "#06213a", "#0c3a52"], neb: ["#6ff0d0", "#9a7bff", "#4dc8ff", "#6ff0d0"],
+      bands: ["#3a9ab8", "#5ac8d8", "#2e7a9a", "#7adce8", "#4aa8c8", "#9ae8f0", "#3888a8"], ring: ["#e8fbff", "#9ad8f0"], rim: "#ffffff",
+      ui: { "--c1": "#9a7bff", "--c2": "#6ff0d0", "--near": "#ffe14a", "--bg": "#030c16", "--bg2": "#08223a", "--panel": "rgba(4, 18, 32, 0.86)", "--miss": "#14304a", "--dim": "#6a9ab8" } },
+    { id: "gas", name: "GAS GIANT", lvl: 6, sky: ["#050302", "#1e1408", "#2e1e0e"], neb: ["#ffb347", "#ff6ad5", "#c8803a", "#ffd08a"],
+      bands: ["#c89a5a", "#e8c08a", "#a8703a", "#f0d8a8", "#b8824a", "#d8a868", "#9a6a3a"], ring: ["#f0d8a8", "#c89a5a"], rim: "#ffe0a8", spot: "#c8402a",
+      ui: { "--c1": "#ffb347", "--c2": "#ffe08a", "--near": "#ff6ad5", "--bg": "#0e0904", "--bg2": "#24180a", "--panel": "rgba(26, 18, 8, 0.86)", "--miss": "#3a2a14", "--dim": "#a88a5e" } },
+    { id: "nova", name: "SUPERNOVA", lvl: 10, sky: ["#0a020c", "#2e0838", "#5a1060"], neb: ["#ff3dd2", "#ffffff", "#ff8af0", "#9df9ff"],
+      bands: ["#ff3dd2", "#ff8af0", "#c8209a", "#ffd0f4", "#e83ab8", "#ff60d8", "#a8187a"], ring: ["#ffffff", "#ff8af0"], rim: "#9df9ff",
+      ui: { "--c1": "#ff3dd2", "--c2": "#9df9ff", "--near": "#fff27a", "--bg": "#10030f", "--bg2": "#2e0a2c", "--panel": "rgba(30, 6, 30, 0.86)", "--miss": "#3e1438", "--dim": "#b07aa8" } },
+    { id: "hole", name: "BLACK HOLE", lvl: 14, sky: ["#000000", "#05030a", "#120a14"], neb: ["#ffa040", "#c9b6ff", "#ff6a2a", "#ffa040"],
+      bands: [], ring: ["#ffe0a0", "#ff8a2a"], rim: "#ffd08a", hole: true,
+      ui: { "--c1": "#ffa040", "--c2": "#c9b6ff", "--near": "#fff0b0", "--bg": "#030205", "--bg2": "#110c18", "--panel": "rgba(10, 6, 16, 0.88)", "--miss": "#221a2e", "--dim": "#8a7aa0" } },
+  ];
+  let S = SECTORS[0];
+
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
   let W = 0, H = 0, back = null, planet = null, ringBack = null, ringFront = null;
   let layers = [], shooters = [], sat = null, nextShoot = 0, nextSat = 0, P = null;
@@ -15,8 +39,9 @@ const Space = (() => {
   const mix = (a, b, t) => { const x = rgb(a), y = rgb(b); return `rgb(${x.map((v, i) => Math.round(v + (y[i] - v) * t)).join(",")})`; };
   const canvas = (w, h) => { const c = document.createElement("canvas"); c.width = Math.max(1, w); c.height = Math.max(1, h); return c; };
 
-  function build(w, h) {
+  function build(w, h, id) {
     W = w; H = h;
+    S = SECTORS.find((x) => x.id === id) || SECTORS[0];
     seed = 2026;
     // sky gradient with dithered nebula blobs
     back = canvas(W, H);
@@ -24,10 +49,10 @@ const Space = (() => {
     const bands = 16;
     for (let i = 0; i < bands; i++) {
       const t = i / (bands - 1);
-      g.fillStyle = t < 0.5 ? mix("#02030a", "#0a0f2e", t / 0.5) : mix("#0a0f2e", "#1c0f3a", (t - 0.5) / 0.5);
+      g.fillStyle = t < 0.5 ? mix(S.sky[0], S.sky[1], t / 0.5) : mix(S.sky[1], S.sky[2], (t - 0.5) / 0.5);
       g.fillRect(0, Math.floor((H * i) / bands), W, Math.ceil(H / bands) + 1);
     }
-    const blobs = [["#ff5a7a", 0.22, 0.3], ["#7af0ff", 0.7, 0.18], ["#9a5bff", 0.4, 0.55], ["#ff5a7a", 0.85, 0.7]];
+    const blobs = [[S.neb[0], 0.22, 0.3], [S.neb[1], 0.7, 0.18], [S.neb[2], 0.4, 0.55], [S.neb[3], 0.85, 0.7]];
     for (const [col, fx, fy] of blobs) {
       const cx = W * fx, cy = H * fy, R = Math.min(W, H) * (0.35 + rnd() * 0.2);
       for (let y = Math.max(0, Math.floor(cy - R)); y < Math.min(H, cy + R); y++) {
@@ -67,8 +92,21 @@ const Space = (() => {
     P = { x: Math.floor(W * 0.86), y: Math.floor(H * 0.86), R };
     planet = canvas(R * 2 + 2, R * 2 + 2);
     const p = planet.getContext("2d");
-    const bandCols = ["#3a1f5c", "#5a2a6e", "#ff5a7a", "#7a3a7a", "#2e1d50", "#c8506e", "#45286a"];
-    for (let y = -R; y <= R; y++) {
+    const bandCols = S.bands;
+    if (S.hole) {
+      // black disc with a hot photon ring around it
+      const r0 = Math.floor(R * 0.55);
+      for (let y = -R; y <= R; y++) for (let x = -R; x <= R; x++) {
+        const d = Math.hypot(x, y);
+        if (d <= r0) { p.fillStyle = "#000000"; p.globalAlpha = 1; }
+        else if (d <= r0 + 2) { p.fillStyle = "#fff0c8"; p.globalAlpha = 0.95; }
+        else if (d <= R) { p.fillStyle = S.ring[1]; p.globalAlpha = Math.max(0, 0.45 * (1 - (d - r0) / (R - r0))); }
+        else continue;
+        p.fillRect(R + 1 + x, R + 1 + y, 1, 1);
+      }
+      p.globalAlpha = 1;
+    }
+    if (!S.hole) for (let y = -R; y <= R; y++) {
       const w = Math.floor(Math.sqrt(R * R - y * y));
       const band = bandCols[Math.floor(((y + R) / (2 * R)) * bandCols.length * 1.6 + Math.sin(y / 4) * 0.6) % bandCols.length];
       for (let x = -w; x < w; x++) {
@@ -78,19 +116,33 @@ const Space = (() => {
         p.fillRect(R + 1 + x, R + 1 + y, 1, 1);
       }
     }
+    // storm spot on the gas giant
+    if (S.spot) {
+      const sx = Math.floor(-R * 0.25), sy = Math.floor(R * 0.28), a = Math.max(2, Math.floor(R * 0.24)), b = Math.max(1, Math.floor(R * 0.12));
+      for (let y = -b; y <= b; y++) for (let x = -a; x <= a; x++) {
+        if ((x * x) / (a * a) + (y * y) / (b * b) > 1) continue;
+        p.fillStyle = mix(S.spot, "#ffd0a0", (x * x) / (a * a) * 0.4);
+        p.fillRect(R + 1 + sx + x, R + 1 + sy + y, 1, 1);
+      }
+    }
     // rim light
-    p.fillStyle = "#7af0ff";
-    p.globalAlpha = 0.5;
-    for (let a = Math.PI * 0.9; a < Math.PI * 1.6; a += 0.02) p.fillRect(Math.floor(R + 1 + Math.cos(a) * R), Math.floor(R + 1 + Math.sin(a) * R), 1, 1);
-    p.globalAlpha = 1;
+    if (!S.hole) {
+      p.fillStyle = S.rim;
+      p.globalAlpha = 0.5;
+      for (let a = Math.PI * 0.9; a < Math.PI * 1.6; a += 0.02) p.fillRect(Math.floor(R + 1 + Math.cos(a) * R), Math.floor(R + 1 + Math.sin(a) * R), 1, 1);
+      p.globalAlpha = 1;
+    }
     const ring = (front) => {
       const c = canvas(R * 5, R * 2);
       const r = c.getContext("2d");
       const cx = R * 2.5, cy = R;
-      for (let k = 0; k < 5; k++) {
-        const rx = R * (1.35 + k * 0.12), ry = rx * 0.22;
-        r.fillStyle = k % 2 ? "#ffd2dc" : "#c89ae8";
-        r.globalAlpha = 0.55 - k * 0.07;
+      if (!S.ring.length) return c;
+      // a black hole gets a wide, bright, flat accretion disc
+      const n = S.hole ? 8 : 5;
+      for (let k = 0; k < n; k++) {
+        const rx = R * (S.hole ? 0.75 + k * 0.16 : 1.35 + k * 0.12), ry = rx * (S.hole ? 0.16 : 0.22);
+        r.fillStyle = k % 2 ? S.ring[0] : S.ring[1];
+        r.globalAlpha = S.hole ? 0.85 - k * 0.08 : 0.55 - k * 0.07;
         for (let a = 0; a < Math.PI * 2; a += 0.6 / rx) {
           const s = Math.sin(a);
           if (front ? s < 0 : s >= 0) continue;
@@ -122,11 +174,11 @@ const Space = (() => {
     const ma = (T / 26000) * Math.PI * 2;
     const mx = P.x + Math.cos(ma) * P.R * 1.9, my = P.y + Math.sin(ma) * P.R * 0.45 - P.R * 0.2;
     const behind = Math.sin(ma) < 0;
-    if (behind) drawMoon(ctx, mx, my);
+    if (behind && !S.hole) drawMoon(ctx, mx, my);
     ctx.drawImage(ringBack, P.x - P.R * 2.5, P.y - P.R);
     ctx.drawImage(planet, P.x - P.R - 1, P.y - P.R - 1);
     ctx.drawImage(ringFront, P.x - P.R * 2.5, P.y - P.R);
-    if (!behind) drawMoon(ctx, mx, my);
+    if (!behind && !S.hole) drawMoon(ctx, mx, my);
     ctx.fillStyle = "rgba(0,0,0,0.28)";
     ctx.fillRect(0, 0, W, H);
   }
@@ -174,5 +226,5 @@ const Space = (() => {
     ctx.globalAlpha = 1;
   }
 
-  return { build, draw };
+  return { build, draw, SECTORS };
 })();

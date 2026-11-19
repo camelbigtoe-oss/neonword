@@ -9,7 +9,8 @@ const BG = (() => {
   let W = 0, H = 0, sky = null, layers = [], drops = [], cars = [], parts = [];
   let C = {};
   let mode = "city";   // "city" (NEONWORD), "grid" (NEONLINK lake, lake.js) or "space" (NEONTRACE, space.js)
-  let scene = "night";
+  let scene = "night";   // NEONLINK lake scene
+  let sector = "deep";   // NEONTRACE space sector
   let seed = 1;
   const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -139,10 +140,11 @@ const BG = (() => {
     drops = Array.from({ length: Math.floor(W * 0.5) }, () => ({ x: Math.random() * W, y: Math.random() * H, v: 2 + Math.random() * 2, l: 2 + Math.floor(Math.random() * 3) }));
     cars = Array.from({ length: 5 }, () => newCar(true));
     if (mode === "grid") Lake.build(W, H, scene);
-    if (mode === "space") Space.build(W, H);
+    if (mode === "space") Space.build(W, H, sector);
   }
 
-  function setMode(m, s) { mode = m; if (s) scene = s; rebuild(); }
+  // s = scene id for "grid", sector id for "space"
+  function setMode(m, s) { mode = m; if (s && m === "grid") scene = s; if (s && m === "space") sector = s; rebuild(); }
 
   function newCar(anywhere) {
     const dir = Math.random() > 0.5 ? 1 : -1;
@@ -252,5 +254,5 @@ const BG = (() => {
   addEventListener("resize", () => { clearTimeout(resize.t); resize.t = setTimeout(resize, 150); });
   resize();
   requestAnimationFrame(frame);
-  return { rebuild, setMode, burst, confetti, SCENES: Lake.SCENES };
+  return { rebuild, setMode, burst, confetti, SCENES: Lake.SCENES, SECTORS: Space.SECTORS };
 })();

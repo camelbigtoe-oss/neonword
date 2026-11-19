@@ -718,7 +718,7 @@ kbd { font-family: "Press Start 2P", monospace; font-size: 10px; color: var(--c2
   width: calc(var(--cs) * 0.74); height: calc(var(--cs) * 0.74);
   display: flex; align-items: center; justify-content: center;
   font-family: "Press Start 2P", monospace; font-size: calc(var(--cs) * 0.32); color: var(--text);
-  background: #1a2150;
+  background: var(--miss);
   /* stepped pixel circle */
   clip-path: polygon(30% 0, 70% 0, 70% 8%, 85% 8%, 85% 15%, 92% 15%, 92% 30%, 100% 30%, 100% 70%, 92% 70%, 92% 85%, 85% 85%, 85% 92%, 70% 92%, 70% 100%, 30% 100%, 30% 92%, 15% 92%, 15% 85%, 8% 85%, 8% 70%, 0 70%, 0 30%, 8% 30%, 8% 15%, 15% 15%, 15% 8%, 30% 8%);
   transition: background .1s, color .1s;
@@ -726,7 +726,7 @@ kbd { font-family: "Press Start 2P", monospace; font-size: 10px; color: var(--c2
 .t-cell.sel span { background: var(--c1); color: var(--bg); }
 .t-cell.found span { background: var(--c2); color: var(--bg); }
 .t-cell.span span { background: var(--near); color: var(--bg); }
-.t-cell.hinted span { background: #1a2150; color: var(--near); box-shadow: inset 0 0 0 3px var(--near); animation: blink 1s steps(1) infinite; }
+.t-cell.hinted span { background: var(--miss); color: var(--near); box-shadow: inset 0 0 0 3px var(--near); animation: blink 1s steps(1) infinite; }
 .t-cell.hinted.sel span { background: var(--c1); color: var(--bg); animation: none; }
 .t-cell.pop span { animation: pop .3s steps(4); }
 .t-ctrls { display: grid; grid-template-columns: 1fr 2fr; gap: 10px; }

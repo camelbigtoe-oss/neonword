@@ -2,7 +2,7 @@
 (() => {
   "use strict";
   // Shown at the bottom of the help screen. Bump together with VERSION in sw.js.
-  const APP_VERSION = 19;
+  const APP_VERSION = 20;
 
   // ---------- config ----------
   const STORE_KEY = "neonword.v1";
@@ -624,7 +624,8 @@
   function levelUp(game, lvl, then = showResult) {
     SFX.levelUp();
     const unlock = game === "word" && THEMES.find((t) => t.lvl === lvl);
-    const scene = game === "links" && BG.SCENES.find((s) => s.lvl === lvl && s.lvl > 1);
+    const scene = (game === "links" && BG.SCENES.find((s) => s.lvl === lvl && s.lvl > 1))
+      || (game === "trace" && BG.SECTORS.find((s) => s.lvl === lvl && s.lvl > 1));
     const name = { word: "NEONWORD", links: "NEONLINK", trace: "NEONTRACE" }[game];
     const el = document.createElement("div");
     el.className = "levelup";
@@ -1015,7 +1016,8 @@
     if (busy) return;
     closeModal();
     document.body.dataset.game = game;
-    BG.setMode(game === "links" ? "grid" : game === "trace" ? "space" : "city", Links.sceneFor(P));
+    Trace.paint(game === "trace");
+    BG.setMode(game === "links" ? "grid" : game === "trace" ? "space" : "city", game === "trace" ? Trace.sectorFor(P) : Links.sceneFor(P));
     document.querySelector('meta[name="theme-color"]').content = getVar("--bg");
     if (game === "menu") renderMenu();
     else if (game === "word") {
