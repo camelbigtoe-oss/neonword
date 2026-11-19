@@ -85,6 +85,90 @@ WOLF:Wild dog that howls
 YARN:Thread for knitting, or a long tale
 ZERO:Nothing at all
 ZONE:Area with a special purpose
+BEAR:Large furry animal that hibernates
+BELL:Rings in a church tower
+BIRD:Feathered flyer
+BLUE:Colour of a clear sky
+BOAT:Floats on water
+BOOK:You read it
+BULB:Light source, or a tulip root
+CAGE:Barred enclosure
+CAKE:Birthday dessert
+CAVE:Hollow in a hillside
+CLAY:Soft earth used for pottery
+COAT:Warm outer garment
+COIN:Small round money
+COLD:Low in temperature
+CORD:Thin rope or cable
+CRAB:Sideways-walking shellfish
+CUBE:Six-sided solid
+DART:Thrown at a board
+DEER:Antlered forest animal
+DESK:Work table
+DICE:Rolled in board games
+DIVE:Plunge into water
+DOOR:Way into a room
+DOVE:Bird of peace
+DRUM:Percussion instrument you hit
+DUCK:Quacking bird, or bend down
+DUNE:Sand hill
+FARM:Place with crops and animals
+FERN:Leafy plant of damp woods
+FIRE:Flames and heat
+FISH:Swims with gills
+FLAG:Banner on a pole
+FORK:Eating utensil with prongs
+FUEL:Burned for energy
+GEAR:Toothed wheel, or equipment
+GIFT:Present
+GOAT:Horned farm animal
+GOLD:Precious yellow metal
+GOLF:Game with clubs and holes
+HAWK:Sharp-eyed bird of prey
+HEAT:Warmth
+HILL:Small mountain
+HIVE:Home of bees
+HORN:Pointed growth on a head, or a car's beeper
+IRON:Metal, or a clothes presser
+KITE:Flies on a string
+KNEE:Joint in the leg
+LAKE:Inland body of water
+LEAF:Green part of a tree
+LION:King of the jungle
+LOCK:Opened with a key
+LUCK:Chance or fortune
+MASK:Face covering
+MILK:White drink from cows
+MOON:Lights the night sky
+NEST:Bird's home
+OVEN:Bakes bread
+PALM:Tropical tree, or inside of the hand
+PEAK:Mountain top
+PINE:Evergreen tree with needles
+PLUG:Goes into a socket
+POEM:Verse
+POOL:Swimming spot
+RAFT:Simple floating platform
+RING:Worn on a finger
+ROAD:Cars drive on it
+ROBE:Long loose garment
+ROSE:Thorny flower
+RUBY:Red gemstone
+SAND:Beach grains
+SEED:Grows into a plant
+SHIP:Large seagoing vessel
+SOAP:Used for washing
+STAR:Twinkles at night
+SWAN:Graceful white water bird
+TENT:Camping shelter
+TREE:Tall woody plant
+VASE:Holds flowers
+VINE:Climbing plant
+WAND:Wizard's stick
+WIND:Moving air
+WING:Used for flying
+WORM:Wriggles in soil
+YOGA:Stretching practice
 `,
 5: `
 ABBEY:Monastery or convent
@@ -277,6 +361,162 @@ WORLD:The Earth and all on it
 YACHT:Luxury sailing boat
 YOUTH:Being young
 ZEBRA:Striped horse
+ACTOR:Plays a role
+ADULT:Fully grown person
+APPLE:Fruit that keeps the doctor away
+BACON:Crispy breakfast meat
+BAGEL:Ring-shaped bread roll
+BANJO:Twangy stringed instrument
+BENCH:Long seat
+BERRY:Small juicy fruit
+BISON:Shaggy wild ox
+BLAST:Explosion
+BLOCK:Solid chunk
+BLUSH:Turn red in the face
+BOOTH:Small enclosed stall
+BRASS:Yellow metal, or trumpets and horns
+BROOM:Sweeps the floor
+CAMEL:Humped desert animal
+CANAL:Man-made waterway
+CARGO:Goods carried by a ship
+CEDAR:Fragrant evergreen tree
+CHALK:Writes on a blackboard
+CHESS:Board game with kings and pawns
+CHILI:Hot pepper
+CIDER:Apple drink
+CLIFF:Steep rock face
+CLOAK:Hooded cape
+COMET:Icy space rock with a tail
+COUCH:Sofa
+CRAFT:Skill, or handmade work
+CREST:Top of a wave or hill
+CRUMB:Tiny piece of bread
+CURVE:Bend
+DEPOT:Storage station
+DITCH:Narrow trench
+DOUGH:Unbaked bread
+DWARF:Small mythical miner
+EMAIL:Electronic message
+EVENT:Something that happens
+FAIRY:Tiny winged sprite
+FENCE:Barrier around a garden
+FLOCK:Group of sheep or birds
+FLOOR:You stand on it
+FORTH:Onward
+FORUM:Place for discussion
+FROWN:Unhappy face
+GAMER:Plays video games
+GECKO:Wall-climbing lizard
+GLOVE:Worn on the hand
+GOOSE:Honking bird
+GRAIN:Wheat or rice seed
+GRASS:Lawn plant
+GRAVY:Meat sauce
+GREEN:Colour of grass
+HABIT:Regular routine
+HATCH:Break out of an egg
+HOTEL:Place to stay when travelling
+HUMOR:Funniness
+INDEX:List at the back of a book
+INPUT:Data put in
+JELLY:Wobbly dessert
+JUMBO:Very large
+KAYAK:Paddled canoe
+KOALA:Eucalyptus-eating marsupial
+LADLE:Soup spoon
+LAYER:One level of a cake
+LEMUR:Ringtailed primate
+LLAMA:Woolly Andes animal
+LODGE:Cabin in the hills
+LOGIC:Reasoning
+LOTUS:Water lily
+MAGMA:Molten rock underground
+MANGO:Tropical stone fruit
+MARSH:Wetland
+MATCH:Strikes to make fire, or a game
+MELON:Large juicy fruit
+MERIT:Worth
+MOOSE:Huge antlered deer
+MOTOR:Engine
+MOVIE:Film
+MUSIC:Songs and melodies
+NOVEL:Long story book
+NURSE:Cares for patients
+OASIS:Water in the desert
+OPERA:Sung drama
+ORGAN:Heart or liver, or a pipe instrument
+PAINT:Coloured liquid for walls
+PANDA:Black and white bamboo eater
+PAPER:You write on it
+PARTY:Celebration
+PASTA:Spaghetti or penne
+PATCH:Small repair piece
+PEDAL:Pushed by a foot on a bike
+PENNY:One cent coin
+PHONE:Device for calls
+PIZZA:Cheesy Italian pie
+PLAIN:Simple, or flat land
+PLANE:Flies in the sky
+POUCH:Small bag
+PRIZE:Award for winning
+PUPPY:Young dog
+RADIO:Plays broadcasts
+RANCH:Cattle farm
+RHYME:Words that sound alike
+RIDER:Person on a horse
+ROAST:Cook in an oven
+ROBIN:Red-breasted bird
+ROCKY:Full of stones
+SALAD:Bowl of leaves
+SAUCE:Poured over food
+SCARF:Worn round the neck
+SCOUT:Explorer sent ahead
+SHARK:Fearsome fish with fins
+SHEEP:Woolly farm animal
+SHIRT:Top with buttons
+SHORE:Edge of the sea
+SKATE:Glide on ice
+SLEEP:Rest at night
+SLIDE:Playground chute
+SLOTH:Very slow tree mammal
+SNACK:Small bite between meals
+SNAKE:Legless reptile
+SPACE:The final frontier
+SPOON:Used for soup
+SQUID:Ten-armed sea creature
+STAGE:Where actors perform
+STAIR:One step in a flight
+STEAM:Hot water vapour
+STONE:Small rock
+STOVE:Cooker
+STRAW:Drinking tube
+SUNNY:Bright with sunshine
+SWAMP:Boggy land
+TABLE:Furniture you eat at
+TEETH:In your mouth
+THEME:Main idea
+THUMB:Short thick finger
+TOAST:Grilled bread
+TORSO:Body trunk
+TRAIL:Path through woods
+TREAT:Special reward
+TRUCK:Large lorry
+TULIP:Spring flower
+UNCLE:Parent's brother
+VIDEO:Recorded moving pictures
+VIOLA:Larger violin
+VISIT:Go to see
+WAGON:Cart pulled by horses
+WALTZ:Ballroom dance in three-time
+WATER:H2O
+WHALE:Largest ocean mammal
+WHEAT:Grain for flour
+WINDY:Breezy
+WOMAN:Adult female
+WRIST:Joint between hand and arm
+YEAST:Makes bread rise
+YIELD:Give way, or produce
+ZESTY:Full of flavour
 `,
 6: `
 ACTION:Something done
@@ -374,6 +614,91 @@ VORTEX:Swirling whirlpool
 WIZARD:Wise magic user
 WINTER:Coldest season
 ZENITH:Highest point
+ALMOND:Oval nut
+ANIMAL:Living creature
+ANTLER:Deer's branched horn
+APPEAR:Come into view
+BADGER:Striped burrowing mammal
+BAKERY:Shop that sells bread
+BALLET:Graceful dance on tiptoe
+BASKET:Woven carrier
+BATTLE:Fight between armies
+BEAVER:Dam-building rodent
+BISHOP:Diagonal chess piece
+BUTTER:Spread made from cream
+BUTTON:Fastens a shirt
+CARPET:Floor covering
+CHEESE:Made from curdled milk
+CHERRY:Small red stone fruit
+CLOVER:Three-leaved plant
+COCOON:Silk case of a caterpillar
+COOKIE:Biscuit
+COTTON:Soft plant fibre
+CRAYON:Wax colouring stick
+DONKEY:Long-eared beast of burden
+DOODLE:Idle scribble
+ELEVEN:One more than ten
+FABRIC:Cloth
+FERRET:Long slim pet that burrows
+FIDDLE:Violin, or tinker
+FLOWER:Blooms in a garden
+FOSSIL:Ancient remains in rock
+GARLIC:Pungent bulb for cooking
+GINGER:Spicy root
+GOBLIN:Small mischievous creature
+GUITAR:Six-stringed instrument
+HELMET:Head protection
+HONEST:Truthful
+INSECT:Six-legged creature
+JACKET:Short coat
+JIGSAW:Picture puzzle
+KETTLE:Boils water
+KITTEN:Young cat
+LADDER:Climbed with rungs
+LAPTOP:Portable computer
+LIZARD:Scaly reptile
+LOCKET:Pendant holding a photo
+MAGNET:Attracts iron
+MANTIS:Praying insect
+MARBLE:Glass ball, or polished stone
+MEDIUM:In the middle
+MITTEN:Glove without fingers
+MONKEY:Swinging primate
+MUFFIN:Small cake
+NAPKIN:Wipes your mouth at dinner
+NEEDLE:Sewing point
+NOODLE:Long thin pasta strip
+OYSTER:Shellfish that can hold a pearl
+PARROT:Talking bird
+PEPPER:Spice, or a bell vegetable
+PILLOW:Rest your head on it
+POLICE:Law enforcers
+PRINCE:King's son
+PUPPET:Moved by strings or a hand
+RACKET:Bat for tennis, or a din
+RAISIN:Dried grape
+REMOTE:Far away, or a TV clicker
+SADDLE:Seat on a horse
+SALMON:Pink fish that swims upstream
+SHADOW:Dark shape cast by light
+SHOVEL:Digging tool
+SPIDER:Eight-legged web spinner
+SPONGE:Soaks up water
+SQUARE:Four equal sides
+STATUE:Carved figure
+STRING:Thin cord
+SUNSET:Evening sky show
+TABLET:Pill, or a flat computer
+TEAPOT:Pours a hot brew
+TENNIS:Racket sport
+TIMBER:Wood for building
+TOMATO:Red salad fruit
+TROPHY:Cup for the winner
+VIOLIN:Bowed string instrument
+WALNUT:Wrinkly nut
+WALRUS:Tusked Arctic mammal
+WINDOW:Glass in a wall
+YELLOW:Colour of a banana
 `,
 7: `
 ABILITY:Skill or talent
@@ -452,6 +777,70 @@ VOLCANO:Mountain that erupts
 WARRIOR:Fighter
 WEATHER:Rain, sun or snow
 WHISPER:Speak very softly
+ACROBAT:Tumbling circus performer
+AIRPORT:Where planes land
+ANTIQUE:Valuable old object
+AVOCADO:Green fruit for guacamole
+BALLOON:Inflated party decoration
+BANDAGE:Covers a wound
+BICYCLE:Two-wheeled pedal vehicle
+BLANKET:Warm bed covering
+BOOKEND:Holds books upright
+CABBAGE:Leafy round vegetable
+CARTOON:Animated film
+CHAMBER:Room
+CHICKEN:Clucking farm bird
+CHIMNEY:Lets smoke out of a house
+CITIZEN:Member of a nation
+COCONUT:Hairy tropical nut
+CONCERT:Live music show
+CUPCAKE:Small iced cake
+CUSTARD:Sweet egg sauce
+DENTIST:Looks after teeth
+EARRING:Ear jewellery
+EXPLORE:Travel to discover
+FACTORY:Building where goods are made
+FEATHER:Covers a bird
+FIREMAN:Puts out blazes
+GALLERY:Room of art
+GIRAFFE:Tallest animal
+GLACIER:Slow river of ice
+GORILLA:Largest ape
+HAMSTER:Small cheek-pouched pet
+HICCUPS:Sudden involuntary gulps
+HOLIDAY:Time off
+JACKPOT:Big win
+KETCHUP:Tomato sauce
+KITCHEN:Room for cooking
+LETTUCE:Salad leaves
+LOBSTER:Clawed red shellfish
+MAILBOX:Letters go in it
+MAMMOTH:Woolly ice-age elephant
+MANSION:Huge house
+MARACAS:Shaken percussion pair
+MUSICAL:Show with songs
+OATMEAL:Porridge
+OSTRICH:Large flightless bird
+PANCAKE:Flat breakfast cake
+PENGUIN:Tuxedoed flightless bird
+PICTURE:Image or photo
+POPCORN:Cinema snack
+PRESENT:Gift, or now
+PUMPKIN:Orange Halloween squash
+RACCOON:Masked bandit mammal
+SANDBOX:Children's play pit
+SCOOTER:Kick-powered ride
+SHAMPOO:Hair wash
+SPINACH:Leafy green vegetable
+SUNBEAM:Ray of sunshine
+TEACHER:Runs a classroom
+TOOLBOX:Holds hammers and spanners
+TRACTOR:Farm vehicle
+TREETOP:Highest part of a tree
+VAMPIRE:Bloodsucking creature of the night
+VILLAGE:Small rural settlement
+WETLAND:Marshy area
+ZOOLOGY:Study of animals
 `
 };
 
