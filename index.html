@@ -80,7 +80,7 @@
     <div class="menu-head">
       <div class="logo menu-logo" data-text="NEON ARCADE">NEON ARCADE</div>
       <p class="menu-sub">&gt; insert cartridge_</p>
-      <div class="menu-hud"><span>LV <b id="m-lvl">1</b></span><span class="m-cr">◈<b id="m-credits">0</b></span></div>
+      <div class="menu-hud"><span class="m-cr">◈<b id="m-credits">0</b> credits</span></div>
     </div>
     <div class="carts">
       <button class="cart" data-go="word">
@@ -94,6 +94,12 @@
         <div class="cart-title">NEONLINK</div>
         <div class="cart-desc">Sort 16 words into 4 secret links.</div>
         <div class="cart-status" id="m-links"></div>
+      </button>
+      <button class="cart trace-pal" data-go="trace">
+        <div class="cart-art trace-art"><i>N</i><i class="on">E</i><i>O</i><i class="on">T</i><i class="on">R</i><i>A</i></div>
+        <div class="cart-title">NEONTRACE</div>
+        <div class="cart-desc">Trace hidden theme words through a letter maze.</div>
+        <div class="cart-status" id="m-trace"></div>
       </button>
     </div>
     <div class="menu-foot">
@@ -150,6 +156,54 @@
     <button class="l-submit" id="l-submit">SUBMIT 0/4</button>
   </div>
 
+  <!-- NEONTRACE -->
+  <div id="trace">
+    <header class="top">
+      <div class="top-left">
+        <button class="icon-btn btn-home" aria-label="Game menu"><svg viewBox="0 0 7 7" width="14" height="14" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="M3 0h1v1h1v1h1v1h1v1h-1v3h-2v-2h-1v2h-2v-3h-1v-1h1v-1h1v-1h1z"/></svg></button>
+        <button class="icon-btn" id="t-help" aria-label="How to play">?</button>
+      </div>
+      <div class="logo" data-text="NEONTRACE">NEONTRACE</div>
+      <div class="top-right">
+        <button class="icon-btn" id="t-sound" aria-label="Radio and sound"><span class="note">♪</span><span class="mini-eq"><i></i><i></i><i></i></span></button>
+        <button class="icon-btn" id="t-stats" aria-label="Stats">▤</button>
+      </div>
+    </header>
+
+    <section class="hud">
+      <div class="lvl">
+        <span class="lvl-label">LV <b id="t-lvl">1</b></span>
+        <div class="xpbar"><div class="xpfill" id="t-xpfill"></div></div>
+        <span class="xp-txt" id="t-xptxt">0/100</span>
+      </div>
+      <div class="credits" title="Hint credits"><span class="chip-ico">◈</span><b id="t-credits">0</b></div>
+    </section>
+
+    <nav class="modes">
+      <button class="mode-btn" data-tmode="daily">DAILY<span class="streak" id="t-streak"></span></button>
+      <button class="mode-btn" data-tmode="endless">ENDLESS</button>
+      <div class="t-prog" id="t-prog"></div>
+    </nav>
+
+    <section class="t-theme">
+      <span class="t-label">THEME</span>
+      <div class="t-clue" id="t-clue"></div>
+      <div class="t-word" id="t-word"></div>
+    </section>
+
+    <main class="t-wrap" id="t-wrap">
+      <div class="t-board" id="t-board">
+        <svg class="t-lines" id="t-lines" aria-hidden="true"></svg>
+        <div class="t-cells" id="t-cells"></div>
+      </div>
+    </main>
+
+    <section class="t-ctrls">
+      <button class="hint-btn" id="t-clear"><span class="h-name">CLEAR</span><span class="h-cost">free</span></button>
+      <button class="hint-btn t-hint" id="t-hint"><span class="h-name">HINT</span><span class="t-meter" id="t-meter"></span><span class="h-cost" id="t-hint-cost">◈2</span></button>
+    </section>
+  </div>
+
   <div class="toasts" id="toasts"></div>
 
   <!-- Modal -->
@@ -164,9 +218,12 @@
   <script src="audio.js"></script>
   <script src="radio.js"></script>
   <script src="lake.js"></script>
+  <script src="space.js"></script>
   <script src="bg.js"></script>
   <script src="links-data.js"></script>
   <script src="links.js"></script>
+  <script src="trace-data.js"></script>
+  <script src="trace.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

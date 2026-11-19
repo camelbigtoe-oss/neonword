@@ -2,7 +2,7 @@
 (() => {
   "use strict";
   // Shown at the bottom of the help screen. Bump together with VERSION in sw.js.
-  const APP_VERSION = 15;
+  const APP_VERSION = 16;
 
   // ---------- config ----------
   const STORE_KEY = "neonword.v1";
@@ -30,6 +30,14 @@
   });
   let P = load(STORE_KEY, defaults());
   P = Object.assign(defaults(), P);
+  // Each game has its own XP and level (P.lv). P.xp stays as the running total so backups
+  // from older builds still load. First run after the split: NEONLINK keeps the XP its own
+  // history shows, NEONWORD keeps the rest.
+  if (!P.lv) {
+    const linkXp = ((P.links && P.links.history) || []).reduce((s, h) => s + (h.xp || 0), 0);
+    P.lv = { word: Math.max(0, P.xp - linkXp), links: Math.min(linkXp, P.xp), trace: 0 };
+  }
+  P.lv = Object.assign({ word: 0, links: 0, trace: 0 }, P.lv);
   let dict = load(DICT_KEY, {});
   let G = null;              // current game
   let busy = false;          // during validation / animation
@@ -81,22 +89,57 @@
   }
 
   // ---------- game setup ----------
+  // ---------- no-repeat word picking ----------
+  // P.seen[len] lists every answer you've been given (daily and endless share it).
+  // New games only pick unseen words. Once a whole list is used up, a new cycle
+  // starts, still keeping the most recent 30% blocked so nothing repeats right away.
+  function seenList(len) {
+    if (!P.seen) P.seen = {};
+    if (!P.seen[len]) {
+      // first run after this update: rebuild from what's already been played
+      const s = new Set();
+      (P.history || []).forEach((h) => h.len === len && s.add(h.w));
+      (P.recent && P.recent[len] || []).forEach((w) => s.add(w));
+      const d = P.games && P.games.daily;
+      if (d && d.len === len) s.add(d.answer);
+      const e = P.games && P.games.endless && P.games.endless[len];
+      if (e) s.add(e.answer);
+      P.seen[len] = [...s];
+    }
+    return P.seen[len];
+  }
+  function unseenPool(len) {
+    let seen = new Set(seenList(len));
+    let pool = WORDS[len].filter((x) => !seen.has(x.w));
+    if (!pool.length) {
+      P.seen[len] = P.seen[len].slice(-Math.floor(WORDS[len].length * 0.3));
+      seen = new Set(P.seen[len]);
+      pool = WORDS[len].filter((x) => !seen.has(x.w));
+    }
+    return pool;
+  }
+  function markSeen(len, w) {
+    const s = seenList(len);
+    if (!s.includes(w)) s.push(w);
+  }
+
+  // Daily: a fixed order walked by date, skipping words you've already had.
   function dailyEntry(key) {
     const list = WORDS[5];
+    const pool = new Set(unseenPool(5).map((x) => x.w));
     const days = Math.round((Date.parse(key) - Date.parse("2026-01-01")) / 864e5);
     const order = seededShuffle(list.length, 1337);
-    return list[order[((days % list.length) + list.length) % list.length]];
+    const start = ((days % list.length) + list.length) % list.length;
+    for (let k = 0; k < list.length; k++) {
+      const e = list[order[(start + k) % list.length]];
+      if (pool.has(e.w)) return e;
+    }
+    return list[order[start]];
   }
 
   function freshGame(mode, len) {
-    let e;
-    if (mode === "daily") e = dailyEntry(dateKey());
-    else {
-      const recent = P.recent[len] || [];
-      const pool = WORDS[len].filter((x) => !recent.includes(x.w));
-      e = pick(pool.length ? pool : WORDS[len]);
-      P.recent[len] = [...recent, e.w].slice(-Math.floor(WORDS[len].length * 0.7));
-    }
+    const e = mode === "daily" ? dailyEntry(dateKey()) : pick(unseenPool(len));
+    markSeen(e.w.length, e.w);
     return {
       mode, len, rows: rowsFor(len), answer: e.w, clue: e.c, date: dateKey(),
       guesses: [], cur: "", status: "play", revealed: {}, burned: [], scanned: {},
@@ -140,7 +183,7 @@
   }
 
   function renderHud() {
-    const L = levelInfo(P.xp);
+    const L = levelInfo(P.lv.word);
     $("#lvl").textContent = L.lvl;
     $("#xpfill").style.width = `${(L.into / L.need) * 100}%`;
     $("#xptxt").textContent = `${L.into}/${L.need}`;
@@ -511,7 +554,7 @@
   function applyRewards(won) {
     if (G.rewarded) return null;
     G.rewarded = true;
-    const before = levelInfo(P.xp).lvl;
+    const before = levelInfo(P.lv.word).lvl;
     const n = G.guesses.length;
     const S = P.stats;
     S.played++;
@@ -536,8 +579,9 @@
       if (G.mode === "daily") P.daily.streak = 0;
     }
     P.xp += xp;
+    P.lv.word += xp;
     P.credits += credits;
-    const after = levelInfo(P.xp).lvl;
+    const after = levelInfo(P.lv.word).lvl;
     G.reward = { xp, credits, bonus };
     P.history.push({
       w: G.answer, c: G.clue, len: G.len, mode: G.mode, won, n: G.guesses.length,
@@ -560,7 +604,7 @@
     renderKeys();
     renderHints();
     setTimeout(() => SFX.coin(), 900);
-    setTimeout(() => { if (lv && lv.after > lv.before) levelUp(lv.after); else showResult(); }, 1800);
+    setTimeout(() => { if (lv && lv.after > lv.before) levelUp("word", lv.after); else showResult(); }, 1800);
   }
 
   function onLose() {
@@ -575,14 +619,16 @@
     setTimeout(showResult, 1800);
   }
 
-  function levelUp(lvl, then = showResult) {
+  // game: "word" | "links" | "trace". Themes unlock with the NEONWORD level, lake scenes with NEONLINK.
+  function levelUp(game, lvl, then = showResult) {
     SFX.levelUp();
-    const unlock = THEMES.find((t) => t.lvl === lvl);
-    const scene = BG.SCENES.find((s) => s.lvl === lvl && s.lvl > 1);
+    const unlock = game === "word" && THEMES.find((t) => t.lvl === lvl);
+    const scene = game === "links" && BG.SCENES.find((s) => s.lvl === lvl && s.lvl > 1);
+    const name = { word: "NEONWORD", links: "NEONLINK", trace: "NEONTRACE" }[game];
     const el = document.createElement("div");
     el.className = "levelup";
-    el.innerHTML = `<div class="lu1">LEVEL ${lvl}</div><div class="lu2">${unlock ? `THEME UNLOCKED: ${unlock.name}` : scene ? `LINK SCENE UNLOCKED: ${scene.name}` : "+1 CREDIT"}</div>`;
-    if (!unlock) { P.credits += 1; save(); renderHud(); }
+    el.innerHTML = `<div class="lu0">${name}</div><div class="lu1">LEVEL ${lvl}</div><div class="lu2">${unlock ? `THEME UNLOCKED: ${unlock.name}` : scene ? `SCENE UNLOCKED: ${scene.name}` : "+1 CREDIT"}</div>`;
+    if (!unlock && !scene) { P.credits += 1; save(); renderHud(); Links.refreshHud(); Trace.refreshHud(); }
     document.body.appendChild(el);
     BG.confetti([getVar("--near"), getVar("--c1"), "#ffffff"]);
     setTimeout(() => { el.remove(); then(); }, 2400);
@@ -679,7 +725,7 @@
   }
 
   function showStats() {
-    const S = P.stats, L = levelInfo(P.xp);
+    const S = P.stats, L = levelInfo(P.lv.word);
     openModal(`
       <h2>STATS</h2>
       <div class="stat-grid">
@@ -693,7 +739,7 @@
         <div><b>${currentDailyStreak()}</b><span>day streak</span></div>
         <div><b>${P.daily.best}</b><span>best run</span></div>
         <div><b>${L.lvl}</b><span>level</span></div>
-        <div><b>${P.xp}</b><span>total xp</span></div>
+        <div><b>${P.lv.word}</b><span>xp</span></div>
       </div>
       <h3>GUESS SPREAD</h3>
       ${distHtml(0)}`);
@@ -720,10 +766,10 @@
   }
 
   function showBackup() {
-    const L = levelInfo(P.xp);
+    const lv = (g) => levelInfo(P.lv[g]).lvl;
     openModal(`
       <h2>BACKUP</h2>
-      <p>Save your progress (level ${L.lvl}, ◈${P.credits}, ${P.history.length} logged codes) as a backup code or file. Keep it somewhere safe, like your notes app or email.</p>
+      <p>Save your progress (NEONWORD LV ${lv("word")}, NEONLINK LV ${lv("links")}, NEONTRACE LV ${lv("trace")}, ◈${P.credits}) as a backup code or file. Keep it somewhere safe, like your notes app or email.</p>
       <div class="btn-row">
         <button class="btn" id="b-copy">COPY CODE</button>
         <button class="btn alt" id="b-file">SAVE FILE</button>
@@ -774,10 +820,10 @@
   }
 
   function showThemes() {
-    const lvl = levelInfo(P.xp).lvl;
+    const lvl = levelInfo(P.lv.word).lvl;
     openModal(`
       <h2>THEMES</h2>
-      <p style="color:var(--dim)">Level up to unlock new palettes.</p>
+      <p style="color:var(--dim)">Level up in NEONWORD to unlock new palettes.</p>
       <div class="theme-grid">
         ${THEMES.map((t) => `
           <button class="theme-card ${P.theme === t.id ? "on" : ""}" data-theme-id="${t.id}" ${lvl < t.lvl ? "disabled" : ""}>
@@ -860,8 +906,8 @@
       $("#r-sfx").classList.toggle("alt", !P.sound);
     };
   }
-  $$("#btn-sound, #l-sound, #m-sound").forEach((b) => (b.onclick = () => { SFX.init(); SFX.click(); showRadio(); }));
-  Radio.onChange(({ playing }) => $$("#btn-sound, #l-sound, #m-sound").forEach((b) => b.classList.toggle("playing", playing)));
+  $$("#btn-sound, #l-sound, #t-sound, #m-sound").forEach((b) => (b.onclick = () => { SFX.init(); SFX.click(); showRadio(); }));
+  Radio.onChange(({ playing }) => $$("#btn-sound, #l-sound, #t-sound, #m-sound").forEach((b) => b.classList.toggle("playing", playing)));
   // drop focus after clicks so Enter on the keyboard never re-clicks a button
   document.addEventListener("click", (e) => e.target.closest("button")?.blur());
   $("#modal-x").onclick = closeModal;
@@ -935,35 +981,37 @@
     $$(".credits").forEach((el) => { el.classList.remove("bump"); void el.offsetWidth; el.classList.add("bump"); });
     return true;
   }
-  function reward(xp, credits) {
-    const before = levelInfo(P.xp).lvl;
+  function reward(game, xp, credits) {
+    const before = levelInfo(P.lv[game]).lvl;
+    P.lv[game] += xp;
     P.xp += xp;
     P.credits += credits;
     save();
-    return { before, after: levelInfo(P.xp).lvl };
+    return { before, after: levelInfo(P.lv[game]).lvl };
   }
   const NW = {
-    get P() { return P; }, save, toast, openModal, closeModal, spend, reward, levelUp, levelInfo,
+    get P() { return P; }, save, toast, openModal, closeModal, spend, reward, levelUp, levelInfo, isValid,
     dateKey, yesterdayKey, nextDailyIn, seededShuffle, getVar, SFX, BG, APP_VERSION,
   };
   Links.setApi(NW);
+  Trace.setApi(NW);
 
   function renderMenu() {
-    const L = levelInfo(P.xp);
-    $("#m-lvl").textContent = L.lvl;
+    const lv = (g) => `LV ${levelInfo(P.lv[g]).lvl} · `;
     $("#m-credits").textContent = P.credits;
     const g = P.games.daily;
-    $("#m-word").textContent = !g || g.date !== dateKey() || g.status === "play"
+    $("#m-word").textContent = lv("word") + (!g || g.date !== dateKey() || g.status === "play"
       ? (g && g.date === dateKey() && g.guesses.length ? "DAILY IN PROGRESS" : "DAILY READY")
-      : g.status === "won" ? "DAILY ✓ CRACKED" : "DAILY ✗ LOCKED OUT";
-    $("#m-links").textContent = Links.dailyStatus(P);
+      : g.status === "won" ? "DAILY ✓ CRACKED" : "DAILY ✗ LOCKED OUT");
+    $("#m-links").textContent = lv("links") + Links.dailyStatus(P);
+    $("#m-trace").textContent = lv("trace") + Trace.dailyStatus(P);
   }
 
   function showGame(game) {
     if (busy) return;
     closeModal();
     document.body.dataset.game = game;
-    BG.setMode(game === "links" ? "grid" : "city", Links.sceneFor(P));
+    BG.setMode(game === "links" ? "grid" : game === "trace" ? "space" : "city", Links.sceneFor(P));
     document.querySelector('meta[name="theme-color"]').content = getVar("--bg");
     if (game === "menu") renderMenu();
     else if (game === "word") {
@@ -971,6 +1019,7 @@
       fitBoard();
       if (!P.seenHelp) setTimeout(showHelp, 300);
     } else if (game === "links") Links.enter(NW);
+    else if (game === "trace") Trace.enter(NW);
   }
   $$(".cart").forEach((b) => b.addEventListener("click", () => { SFX.init(); SFX.coin(); showGame(b.dataset.go); }));
   $$(".btn-home").forEach((b) => b.addEventListener("click", () => { SFX.init(); SFX.click(); showGame("menu"); }));

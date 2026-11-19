@@ -46,9 +46,18 @@ body[data-game="links"], .links-pal {
   --g0: #ffe14a; --g1: #3dff7a; --g2: #34b8ff; --g3: #c35bff;
 }
 
+/* NEONTRACE: ice blue + coral over deep space */
+body[data-game="trace"], .trace-pal {
+  --bg: #060818; --bg2: #0d1230; --panel: rgba(8, 12, 34, 0.86);
+  --c1: #ff5a7a; --c2: #7af0ff; --text: #eef4ff; --dim: #7480b0;
+  --hit: #7af0ff; --near: #ffd23f; --miss: #1b2246; --burn: #ff3d5a;
+  --sky1: #02030a; --sky2: #0a0f2e; --sky3: #1c0f3a;
+}
+
 /* only the active screen shows */
 body:not([data-game="word"]) #app,
 body:not([data-game="links"]) #links,
+body:not([data-game="trace"]) #trace,
 body:not([data-game="menu"]) #menu { display: none !important; }
 
 /* ============ BASE ============ */
@@ -81,7 +90,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
   mix-blend-mode: multiply;
 }
 
-#app, #links, #menu {
+#app, #links, #trace, #menu {
   position: relative; z-index: 10;
   height: 100dvh;
   max-width: 540px; margin: 0 auto;
@@ -679,6 +688,84 @@ kbd { font-family: "Press Start 2P", monospace; font-size: 10px; color: var(--c2
   #menu { gap: 12px; }
   .menu-sub { margin: 4px 0; }
   .l-submit { padding: 8px; }
+}
+
+/* ============ NEONTRACE ============ */
+.t-prog { margin-left: auto; font-family: "Press Start 2P", monospace; font-size: 9px; color: var(--dim); }
+.t-prog b { color: var(--c2); font-weight: normal; }
+.t-theme {
+  background: var(--panel); text-align: center; padding: 8px 10px 6px;
+  box-shadow: 0 -2px 0 0 var(--c1), 0 2px 0 0 var(--c1), -2px 0 0 0 var(--c1), 2px 0 0 0 var(--c1), inset 0 0 20px rgba(0,0,0,.5);
+}
+.t-label { font-family: "Press Start 2P", monospace; font-size: 8px; color: var(--c1); letter-spacing: 2px; }
+.t-clue { font-size: 24px; line-height: 1.1; color: var(--text); margin: 2px 0; }
+.t-word { font-family: "Press Start 2P", monospace; font-size: 12px; min-height: 18px; line-height: 18px; color: var(--dim); letter-spacing: 2px; }
+.t-word.typing { color: var(--text); }
+.t-word.good { color: var(--c2); text-shadow: 0 0 10px var(--c2); }
+.t-word.span { color: var(--near); text-shadow: 0 0 10px var(--near); }
+.t-word.clue { color: var(--near); font-size: 9px; }
+.t-wrap { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; }
+.t-board { --cs: 48px; position: relative; width: calc(var(--cs) * 6); height: calc(var(--cs) * 8); }
+.t-board.shake { animation: shake .45s steps(6); }
+.t-lines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.t-lines polyline { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.t-lines .sel { stroke: var(--c1); opacity: .8; }
+.t-lines .found { stroke: var(--c2); opacity: .45; }
+.t-lines .span { stroke: var(--near); opacity: .55; }
+.t-cells { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(6, var(--cs)); grid-auto-rows: var(--cs); touch-action: none; }
+.t-cell { display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.t-cell span {
+  width: calc(var(--cs) * 0.74); height: calc(var(--cs) * 0.74);
+  display: flex; align-items: center; justify-content: center;
+  font-family: "Press Start 2P", monospace; font-size: calc(var(--cs) * 0.32); color: var(--text);
+  background: #1a2150;
+  /* stepped pixel circle */
+  clip-path: polygon(30% 0, 70% 0, 70% 8%, 85% 8%, 85% 15%, 92% 15%, 92% 30%, 100% 30%, 100% 70%, 92% 70%, 92% 85%, 85% 85%, 85% 92%, 70% 92%, 70% 100%, 30% 100%, 30% 92%, 15% 92%, 15% 85%, 8% 85%, 8% 70%, 0 70%, 0 30%, 8% 30%, 8% 15%, 15% 15%, 15% 8%, 30% 8%);
+  transition: background .1s, color .1s;
+}
+.t-cell.sel span { background: var(--c1); color: var(--bg); }
+.t-cell.found span { background: var(--c2); color: var(--bg); }
+.t-cell.span span { background: var(--near); color: var(--bg); }
+.t-cell.hinted span { background: #1a2150; color: var(--near); box-shadow: inset 0 0 0 3px var(--near); animation: blink 1s steps(1) infinite; }
+.t-cell.hinted.sel span { background: var(--c1); color: var(--bg); animation: none; }
+.t-cell.pop span { animation: pop .3s steps(4); }
+.t-ctrls { display: grid; grid-template-columns: 1fr 2fr; gap: 10px; }
+.t-hint { flex-direction: row; justify-content: center; gap: 10px; padding: 10px 4px; }
+.t-hint.ready { background: var(--near); }
+.t-hint.ready .h-name, .t-hint.ready .h-cost { color: var(--bg); }
+.t-meter { display: flex; gap: 3px; }
+.t-meter i { width: 10px; height: 10px; background: var(--miss); box-shadow: 0 0 0 2px var(--dim); }
+.t-meter i.on { background: var(--near); box-shadow: 0 0 0 2px var(--near), 0 0 8px var(--near); }
+.t-ctrls .hint-btn { justify-content: center; }
+.t-span-reveal { color: var(--near); text-shadow: 0 0 14px var(--near); font-size: 16px; letter-spacing: 2px; }
+.t-list { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+.t-list span { background: var(--c2); color: var(--bg); font-family: "Press Start 2P", monospace; font-size: 9px; padding: 5px 6px; }
+.t-trail { display: flex; flex-wrap: wrap; gap: 4px; margin: 8px 0; }
+.t-trail i { width: 16px; height: 16px; background: var(--c2); }
+.t-trail i.s { background: var(--near); }
+.t-trail i.h { background: var(--c1); clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
+.trace-art { grid-template-columns: repeat(3, 18px); gap: 4px; }
+.trace-art i { width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-style: normal; font-family: "Press Start 2P", monospace; font-size: 8px; background: rgba(8,12,34,.8); color: var(--text); }
+.trace-art i.on { background: var(--c2); color: var(--bg); box-shadow: 0 0 8px var(--c2); }
+.levelup .lu0 { font-size: 11px; color: var(--c2); margin-bottom: 12px; animation: luIn 2.4s steps(12) forwards; }
+
+@media (orientation: landscape) and (max-height: 520px) {
+  #trace {
+    max-width: 1200px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: auto auto auto auto 1fr auto;
+    grid-template-areas: "board top" "board hud" "board modes" "board theme" "board ." "board ctrls";
+    column-gap: 18px; row-gap: 6px;
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+  }
+  #trace .top { grid-area: top; min-width: 0; }
+  #trace .hud { grid-area: hud; }
+  #trace .modes { grid-area: modes; }
+  #trace .t-theme { grid-area: theme; }
+  #trace .t-wrap { grid-area: board; min-width: 0; }
+  #trace .t-ctrls { grid-area: ctrls; }
 }
 
 @media (prefers-reduced-motion: reduce) {

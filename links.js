@@ -93,7 +93,7 @@ const Links = (() => {
   }
 
   function renderHud() {
-    const I = NW.levelInfo(NW.P.xp);
+    const I = NW.levelInfo(NW.P.lv.links);
     $("#l-lvl").textContent = I.lvl;
     $("#l-xpfill").style.width = `${(I.into / I.need) * 100}%`;
     $("#l-xptxt").textContent = `${I.into}/${I.need}`;
@@ -335,7 +335,7 @@ const Links = (() => {
     G.reward = { xp, credits, bonus };
     L.history.push({ id: G.id, mode: G.mode, won, m: G.mistakes, hints: G.hints, xp, t: Date.now() });
     if (L.history.length > 2000) L.history = L.history.slice(-2000);
-    return NW.reward(xp, credits);
+    return NW.reward("links", xp, credits);
   }
 
   function onWin() {
@@ -347,7 +347,7 @@ const Links = (() => {
     $$("#l-solved .l-bar").forEach((b, i) => setTimeout(() => b.classList.add("dance"), i * 110));
     renderAll();
     setTimeout(() => NW.SFX.coin(), 900);
-    setTimeout(() => { if (lv && lv.after > lv.before) NW.levelUp(lv.after, showResult); else showResult(); }, 1800);
+    setTimeout(() => { if (lv && lv.after > lv.before) NW.levelUp("links", lv.after, showResult); else showResult(); }, 1800);
   }
 
   async function onLose() {
@@ -462,7 +462,7 @@ const Links = (() => {
       <p><kbd>PAIR</kbd> ◈1 — light up two words that share a link.</p>
       <p><kbd>DECODE</kbd> ◈2 — reveal the name of one link.</p>
       <h3>REWARDS</h3>
-      <p>Same level and ◈ as NEONWORD. Fewer mistakes = more XP. Daily grids pay 1.5× XP, +◈1, and every 7-day streak pays ◈5.</p>
+      <p>NEONLINK has its own level, which unlocks lake scenes (◆). ◈ credits are shared across games. Fewer mistakes = more XP. Daily grids pay 1.5× XP, +◈1, and every 7-day streak pays ◈5.</p>
       <div class="btn-row"><button class="btn" id="lh-go">PATCH IN</button></div>
       <p style="color:var(--dim);font-size:15px;margin-top:14px">build ${NW.APP_VERSION}</p>`);
     $("#lh-go").onclick = NW.closeModal;
@@ -501,18 +501,18 @@ const Links = (() => {
   // ---------- scenes (backgrounds that unlock with level) ----------
   // Picked scene, falling back to the first one if it is somehow locked (e.g. an old backup).
   function sceneFor(P) {
-    const lvl = NW.levelInfo(P.xp).lvl;
+    const lvl = NW.levelInfo(P.lv.links).lvl;
     const id = P.links && P.links.scene;
     const s = BG.SCENES.find((x) => x.id === id);
     return s && s.lvl <= lvl ? s.id : BG.SCENES[0].id;
   }
 
   function showScenes() {
-    const lvl = NW.levelInfo(NW.P.xp).lvl;
+    const lvl = NW.levelInfo(NW.P.lv.links).lvl;
     const cur = sceneFor(NW.P);
     NW.openModal(`
       <h2>LINK SCENES</h2>
-      <p style="color:var(--dim)">Level up to unlock new skies over the lake.</p>
+      <p style="color:var(--dim)">Level up in NEONLINK to unlock new skies over the lake.</p>
       <div class="theme-grid">
         ${BG.SCENES.map((s) => `
           <button class="theme-card ${cur === s.id ? "on" : ""}" data-scene="${s.id}" ${lvl < s.lvl ? "disabled" : ""}>

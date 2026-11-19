@@ -8,7 +8,7 @@ const BG = (() => {
   const fx = fxc.getContext("2d");
   let W = 0, H = 0, sky = null, layers = [], drops = [], cars = [], parts = [];
   let C = {};
-  let mode = "city";   // "city" (NEONWORD) or "grid" (NEONLINK: lake scene from lake.js)
+  let mode = "city";   // "city" (NEONWORD), "grid" (NEONLINK lake, lake.js) or "space" (NEONTRACE, space.js)
   let scene = "night";
   let seed = 1;
   const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
@@ -139,6 +139,7 @@ const BG = (() => {
     drops = Array.from({ length: Math.floor(W * 0.5) }, () => ({ x: Math.random() * W, y: Math.random() * H, v: 2 + Math.random() * 2, l: 2 + Math.floor(Math.random() * 3) }));
     cars = Array.from({ length: 5 }, () => newCar(true));
     if (mode === "grid") Lake.build(W, H, scene);
+    if (mode === "space") Space.build(W, H);
   }
 
   function setMode(m, s) { mode = m; if (s) scene = s; rebuild(); }
@@ -184,6 +185,7 @@ const BG = (() => {
 
   function frame(t) {
     if (mode === "grid") { Lake.draw(ctx, t); drawParts(); requestAnimationFrame(frame); return; }
+    if (mode === "space") { Space.draw(ctx, t); drawParts(); requestAnimationFrame(frame); return; }
     ctx.drawImage(sky, 0, 0);
     drawLayer(layers[0], t);
     // cars between far and mid
