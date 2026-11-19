@@ -36,7 +36,7 @@ const Links = (() => {
   // ---------- setup ----------
   // ---------- no-repeat puzzle picking ----------
   // L.seen lists every puzzle id you've been given (daily and endless share it).
-  // New games only pick unseen puzzles. When all are used, a new cycle starts with
+  // New endless games only pick unseen puzzles. When all are used, a new cycle starts with
   // the most recent 30% still blocked so nothing repeats right away.
   function seenIds() {
     if (!Array.isArray(L.seen)) {
@@ -62,18 +62,12 @@ const Links = (() => {
     return pool;
   }
 
-  // Daily: a fixed order walked by date, skipping puzzles you've already had.
+  // Daily: a fixed order walked by date, the same grid for every player so the
+  // leaderboard compares like with like. Only endless skips puzzles you've had.
   function dailyId(key) {
     const n = LINK_PUZZLES.length;
-    const pool = new Set(unseenIds());
     const days = Math.round((Date.parse(key) - Date.parse("2026-01-01")) / 864e5);
-    const order = NW.seededShuffle(n, 4242);
-    const start = ((days % n) + n) % n;
-    for (let k = 0; k < n; k++) {
-      const id = order[(start + k) % n];
-      if (pool.has(id)) return id;
-    }
-    return order[start];
+    return NW.seededShuffle(n, 4242)[((days % n) + n) % n];
   }
 
   function freshGame(mode) {
