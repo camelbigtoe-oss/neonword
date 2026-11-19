@@ -768,6 +768,21 @@ kbd { font-family: "Press Start 2P", monospace; font-size: 10px; color: var(--c2
   #trace .t-ctrls { grid-area: ctrls; }
 }
 
+/* ============ LEADERBOARD ============ */
+.b-name { resize: none; height: 44px; font-size: 22px; text-transform: uppercase; }
+.b-list { display: flex; flex-direction: column; gap: 5px; min-height: 60px; }
+.b-row { display: flex; align-items: center; gap: 8px; padding: 7px 8px; background: var(--panel); box-shadow: -3px 0 0 0 var(--dim); font-size: 19px; }
+.b-row.me { box-shadow: -3px 0 0 0 var(--c1), 0 0 10px rgba(0,0,0,.4); }
+.b-row.b-head { background: none; box-shadow: none; font-family: "Press Start 2P", monospace; font-size: 8px; color: var(--dim); padding: 0 8px; }
+.b-rank { width: 22px; font-family: "Press Start 2P", monospace; font-size: 10px; color: var(--near); }
+.b-name-cell { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.b-lv { font-family: "Press Start 2P", monospace; font-size: 10px; color: var(--c2); }
+.b-xp { width: 72px; text-align: right; color: var(--dim); font-size: 16px; }
+.b-res { width: 46px; text-align: center; }
+.b-res.ok { color: var(--hit); }
+.b-res.bad { color: var(--burn); }
+.b-res.none { color: var(--dim); }
+
 @media (prefers-reduced-motion: reduce) {
   .logo { animation: none; }
 }

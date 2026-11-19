@@ -2,7 +2,7 @@
 (() => {
   "use strict";
   // Shown at the bottom of the help screen. Bump together with VERSION in sw.js.
-  const APP_VERSION = 16;
+  const APP_VERSION = 17;
 
   // ---------- config ----------
   const STORE_KEY = "neonword.v1";
@@ -589,6 +589,7 @@
     });
     if (P.history.length > 2000) P.history = P.history.slice(-2000);
     save();
+    Board.sync();
     return { before, after };
   }
 
@@ -987,6 +988,7 @@
     P.xp += xp;
     P.credits += credits;
     save();
+    Board.sync();
     return { before, after: levelInfo(P.lv[game]).lvl };
   }
   const NW = {
@@ -995,6 +997,7 @@
   };
   Links.setApi(NW);
   Trace.setApi(NW);
+  Board.setApi(NW);
 
   function renderMenu() {
     const lv = (g) => `LV ${levelInfo(P.lv[g]).lvl} · `;
@@ -1005,6 +1008,7 @@
       : g.status === "won" ? "DAILY ✓ CRACKED" : "DAILY ✗ LOCKED OUT");
     $("#m-links").textContent = lv("links") + Links.dailyStatus(P);
     $("#m-trace").textContent = lv("trace") + Trace.dailyStatus(P);
+    Board.sync();
   }
 
   function showGame(game) {
@@ -1025,6 +1029,7 @@
   $$(".btn-home").forEach((b) => b.addEventListener("click", () => { SFX.init(); SFX.click(); showGame("menu"); }));
   $("#m-themes").onclick = () => { SFX.init(); SFX.click(); showThemes(); };
   $("#m-backup").onclick = () => { SFX.init(); SFX.click(); showBackup(); };
+  $("#m-board").onclick = () => { SFX.init(); SFX.click(); Board.open(); };
 
   // ---------- boot ----------
   startMode(P.mode, P.len);
