@@ -108,7 +108,8 @@ const Space = (() => {
     }
     if (!S.hole) for (let y = -R; y <= R; y++) {
       const w = Math.floor(Math.sqrt(R * R - y * y));
-      const band = bandCols[Math.floor(((y + R) / (2 * R)) * bandCols.length * 1.6 + Math.sin(y / 4) * 0.6) % bandCols.length];
+      const bi = Math.floor(((y + R) / (2 * R)) * bandCols.length * 1.6 + Math.sin(y / 4) * 0.6);
+      const band = bandCols[((bi % bandCols.length) + bandCols.length) % bandCols.length];
       for (let x = -w; x < w; x++) {
         // light from the top left, darker toward the bottom right edge
         const lit = 1 - Math.min(1, Math.max(0, (x + y * 0.6) / (R * 1.1) + 0.35));

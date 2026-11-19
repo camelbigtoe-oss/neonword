@@ -2,7 +2,7 @@
 (() => {
   "use strict";
   // Shown at the bottom of the help screen. Bump together with VERSION in sw.js.
-  const APP_VERSION = 20;
+  const APP_VERSION = 21;
 
   // ---------- config ----------
   const STORE_KEY = "neonword.v1";
@@ -897,8 +897,19 @@
       <h2>NEON RADIO</h2>
       <div id="radio-root"></div>
       <h3>SOUND FX</h3>
-      <div class="btn-row" style="margin-top:0"><button class="btn ${P.sound ? "" : "alt"}" id="r-sfx" style="margin-top:0">SFX: ${P.sound ? "ON" : "OFF"}</button></div>`);
+      <div class="btn-row" style="margin-top:0"><button class="btn ${P.sound ? "" : "alt"}" id="r-sfx" style="margin-top:0">SFX: ${P.sound ? "ON" : "OFF"}</button></div>
+      <h3>SCREEN</h3>
+      <div class="btn-row" style="margin-top:0"><button class="btn ${P.awake !== false ? "" : "alt"}" id="r-awake" style="margin-top:0">${P.awake !== false ? "STAYS ON" : "AUTO SLEEP"}</button></div>
+      <p style="color:var(--dim);font-size:16px">${"wakeLock" in navigator ? "Keeps the screen on while the app is open." : "This browser can't keep the screen on."}</p>`);
     Radio.mount($("#radio-root"));
+    $("#r-awake").onclick = () => {
+      P.awake = P.awake === false;
+      save();
+      SFX.click();
+      if (P.awake) keepAwake(); else letSleep();
+      $("#r-awake").textContent = P.awake ? "STAYS ON" : "AUTO SLEEP";
+      $("#r-awake").classList.toggle("alt", !P.awake);
+    };
     $("#r-sfx").onclick = () => {
       P.sound = !P.sound;
       SFX.enabled = P.sound;
@@ -970,6 +981,26 @@
   }
   unlockRotation();
   document.addEventListener("pointerdown", unlockRotation, { once: true, capture: true });
+
+  // ---------- keep the screen on ----------
+  // Screen Wake Lock: stops the phone dimming and locking while you think. On by default
+  // (P.awake), switchable in the ♪ menu. The browser drops the lock whenever the app is
+  // hidden, so it is asked for again when the app comes back and on the next tap.
+  let wakeLock = null;
+  async function keepAwake() {
+    if (P.awake === false || wakeLock || !("wakeLock" in navigator) || document.visibilityState !== "visible") return;
+    try {
+      wakeLock = await navigator.wakeLock.request("screen");
+      wakeLock.addEventListener("release", () => { wakeLock = null; });
+    } catch { wakeLock = null; }
+  }
+  function letSleep() {
+    if (wakeLock) wakeLock.release().catch(() => {});
+    wakeLock = null;
+  }
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") keepAwake(); });
+  document.addEventListener("pointerdown", keepAwake, { capture: true });
+  keepAwake();
 
   // Ask the browser not to auto-clear this site's saved data when storage runs low.
   try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch {}
