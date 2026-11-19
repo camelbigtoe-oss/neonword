@@ -50,6 +50,7 @@ The leaderboard (★ on the menu) keeps scores in a free Supabase project.
    create policy "read scores" on public.scores for select to anon using (true);
    create policy "add scores" on public.scores for insert to anon with check (true);
    create policy "update scores" on public.scores for update to anon using (true) with check (true);
+   grant select, insert, update on public.scores to anon;
    ```
 
 3. Copy the **Project URL** and the **anon public** key (Project Settings > API) into the two

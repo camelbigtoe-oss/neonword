@@ -2,7 +2,7 @@
 (() => {
   "use strict";
   // Shown at the bottom of the help screen. Bump together with VERSION in sw.js.
-  const APP_VERSION = 17;
+  const APP_VERSION = 18;
 
   // ---------- config ----------
   const STORE_KEY = "neonword.v1";

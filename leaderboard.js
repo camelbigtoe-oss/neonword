@@ -5,8 +5,8 @@
 const Board = (() => {
   "use strict";
   // Fill these in from Supabase: Project Settings > API. The anon key is meant to be public.
-  const SUPABASE_URL = "";
-  const SUPABASE_KEY = "";
+  const SUPABASE_URL = "https://qqqkjvtqycwogrwpmbat.supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFxcWtqdnRxeWN3b2dyd3BtYmF0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTUwNDUyMjIsImV4cCI6MjExMDYyMTIyMn0.E8K1X_v-fz2MxzvfrMVZPCoDgFG_1vJWRqqVF22K654";
 
   const $ = (s) => document.querySelector(s);
   const $$ = (s) => [...document.querySelectorAll(s)];
