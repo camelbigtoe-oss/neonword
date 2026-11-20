@@ -8,9 +8,13 @@ const BG = (() => {
   const fx = fxc.getContext("2d");
   let W = 0, H = 0, sky = null, layers = [], drops = [], cars = [], parts = [];
   let C = {};
-  let mode = "city";   // "city" (NEONWORD), "grid" (NEONLINK lake, lake.js) or "space" (NEONTRACE, space.js)
+  // "city" (NEONWORD), "grid" (NEONLINK lake, lake.js), "space" (NEONTRACE, space.js),
+  // "cave" (NEONRARE, cave.js) or "terrain" (NEONSCALE, terrain.js)
+  let mode = "city";
   let scene = "night";   // NEONLINK lake scene
   let sector = "deep";   // NEONTRACE space sector
+  let cavern = "amethyst";   // NEONRARE crystal cavern (cave.js)
+  let zone = "dusk";         // NEONSCALE terrain zone (terrain.js)
   let seed = 1;
   const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -141,10 +145,19 @@ const BG = (() => {
     cars = Array.from({ length: 5 }, () => newCar(true));
     if (mode === "grid") Lake.build(W, H, scene);
     if (mode === "space") Space.build(W, H, sector);
+    if (mode === "cave") Cave.build(W, H, cavern);
+    if (mode === "terrain") Terrain.build(W, H, zone);
   }
 
-  // s = scene id for "grid", sector id for "space"
-  function setMode(m, s) { mode = m; if (s && m === "grid") scene = s; if (s && m === "space") sector = s; rebuild(); }
+  // s = scene id for "grid", sector for "space", cavern for "cave", zone for "terrain"
+  function setMode(m, s) {
+    mode = m;
+    if (s && m === "grid") scene = s;
+    if (s && m === "space") sector = s;
+    if (s && m === "cave") cavern = s;
+    if (s && m === "terrain") zone = s;
+    rebuild();
+  }
 
   function newCar(anywhere) {
     const dir = Math.random() > 0.5 ? 1 : -1;
@@ -188,6 +201,8 @@ const BG = (() => {
   function frame(t) {
     if (mode === "grid") { Lake.draw(ctx, t); drawParts(); requestAnimationFrame(frame); return; }
     if (mode === "space") { Space.draw(ctx, t); drawParts(); requestAnimationFrame(frame); return; }
+    if (mode === "cave") { Cave.draw(ctx, t); drawParts(); requestAnimationFrame(frame); return; }
+    if (mode === "terrain") { Terrain.draw(ctx, t); drawParts(); requestAnimationFrame(frame); return; }
     ctx.drawImage(sky, 0, 0);
     drawLayer(layers[0], t);
     // cars between far and mid
@@ -254,5 +269,5 @@ const BG = (() => {
   addEventListener("resize", () => { clearTimeout(resize.t); resize.t = setTimeout(resize, 150); });
   resize();
   requestAnimationFrame(frame);
-  return { rebuild, setMode, burst, confetti, SCENES: Lake.SCENES, SECTORS: Space.SECTORS };
+  return { rebuild, setMode, burst, confetti, SCENES: Lake.SCENES, SECTORS: Space.SECTORS, CAVERNS: Cave.SCENES, ZONES: Terrain.SCENES };
 })();

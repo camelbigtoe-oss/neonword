@@ -2,7 +2,7 @@
 (() => {
   "use strict";
   // Shown at the bottom of the help screen. Bump together with VERSION in sw.js.
-  const APP_VERSION = 21;
+  const APP_VERSION = 22;
 
   // ---------- config ----------
   const STORE_KEY = "neonword.v1";
@@ -37,7 +37,7 @@
     const linkXp = ((P.links && P.links.history) || []).reduce((s, h) => s + (h.xp || 0), 0);
     P.lv = { word: Math.max(0, P.xp - linkXp), links: Math.min(linkXp, P.xp), trace: 0 };
   }
-  P.lv = Object.assign({ word: 0, links: 0, trace: 0 }, P.lv);
+  P.lv = Object.assign({ word: 0, links: 0, trace: 0, rare: 0, scale: 0 }, P.lv);
   let dict = load(DICT_KEY, {});
   let G = null;              // current game
   let busy = false;          // during validation / animation
@@ -171,8 +171,8 @@
   // ---------- rendering ----------
   function renderAll() {
     document.body.dataset.theme = P.theme;
-    $$(".mode-btn").forEach((b) => b.classList.toggle("on", b.dataset.mode === P.mode));
-    $$(".len-btn").forEach((b) => b.classList.toggle("on", +b.dataset.len === G.len));
+    $$("#app .mode-btn").forEach((b) => b.classList.toggle("on", b.dataset.mode === P.mode));
+    $$("#app .len-btn").forEach((b) => b.classList.toggle("on", +b.dataset.len === G.len));
     $("#lens").classList.toggle("hidden", P.mode === "daily");
     SFX.enabled = P.sound;
     renderHud();
@@ -314,7 +314,7 @@
 
   function renderHints() {
     const over = G.status !== "play";
-    $$(".hint-btn").forEach((b) => {
+    $$("#app .hint-btn").forEach((b) => {
       const h = b.dataset.hint;
       b.disabled = over || (h === "clue" && G.clueShown);
       b.classList.toggle("armed", armed === h);
@@ -620,17 +620,20 @@
     setTimeout(showResult, 1800);
   }
 
-  // game: "word" | "links" | "trace". Themes unlock with the NEONWORD level, lake scenes with NEONLINK.
+  // game: "word" | "links" | "trace" | "rare" | "scale". Themes unlock with the NEONWORD level;
+  // each other game unlocks its own backgrounds (lake scenes, sectors, caverns, zones).
   function levelUp(game, lvl, then = showResult) {
     SFX.levelUp();
     const unlock = game === "word" && THEMES.find((t) => t.lvl === lvl);
     const scene = (game === "links" && BG.SCENES.find((s) => s.lvl === lvl && s.lvl > 1))
-      || (game === "trace" && BG.SECTORS.find((s) => s.lvl === lvl && s.lvl > 1));
-    const name = { word: "NEONWORD", links: "NEONLINK", trace: "NEONTRACE" }[game];
+      || (game === "trace" && BG.SECTORS.find((s) => s.lvl === lvl && s.lvl > 1))
+      || (game === "rare" && BG.CAVERNS.find((s) => s.lvl === lvl && s.lvl > 1))
+      || (game === "scale" && BG.ZONES.find((s) => s.lvl === lvl && s.lvl > 1));
+    const name = { word: "NEONWORD", links: "NEONLINK", trace: "NEONTRACE", rare: "NEONRARE", scale: "NEONSCALE" }[game];
     const el = document.createElement("div");
     el.className = "levelup";
     el.innerHTML = `<div class="lu0">${name}</div><div class="lu1">LEVEL ${lvl}</div><div class="lu2">${unlock ? `THEME UNLOCKED: ${unlock.name}` : scene ? `SCENE UNLOCKED: ${scene.name}` : "+1 CREDIT"}</div>`;
-    if (!unlock && !scene) { P.credits += 1; save(); renderHud(); Links.refreshHud(); Trace.refreshHud(); }
+    if (!unlock && !scene) { P.credits += 1; save(); renderHud(); Links.refreshHud(); Trace.refreshHud(); Rare.refreshHud(); Scale.refreshHud(); }
     document.body.appendChild(el);
     BG.confetti([getVar("--near"), getVar("--c1"), "#ffffff"]);
     setTimeout(() => { el.remove(); then(); }, 2400);
@@ -771,7 +774,7 @@
     const lv = (g) => levelInfo(P.lv[g]).lvl;
     openModal(`
       <h2>BACKUP</h2>
-      <p>Save your progress (NEONWORD LV ${lv("word")}, NEONLINK LV ${lv("links")}, NEONTRACE LV ${lv("trace")}, ◈${P.credits}) as a backup code or file. Keep it somewhere safe, like your notes app or email.</p>
+      <p>Save your progress (NEONWORD LV ${lv("word")}, NEONLINK LV ${lv("links")}, NEONTRACE LV ${lv("trace")}, NEONRARE LV ${lv("rare")}, NEONSCALE LV ${lv("scale")}, ◈${P.credits}) as a backup code or file. Keep it somewhere safe, like your notes app or email.</p>
       <div class="btn-row">
         <button class="btn" id="b-copy">COPY CODE</button>
         <button class="btn alt" id="b-file">SAVE FILE</button>
@@ -876,13 +879,13 @@
     const k = e.target.closest(".key");
     if (k) press(k.dataset.k);
   });
-  $$(".hint-btn").forEach((b) => b.addEventListener("click", () => useHint(b.dataset.hint)));
-  $$(".mode-btn").forEach((b) => b.addEventListener("click", () => {
+  $$("#app .hint-btn").forEach((b) => b.addEventListener("click", () => useHint(b.dataset.hint)));
+  $$("#app .mode-btn").forEach((b) => b.addEventListener("click", () => {
     SFX.init(); SFX.click();
     if (busy) return;
     startMode(b.dataset.mode, P.len);
   }));
-  $$(".len-btn").forEach((b) => b.addEventListener("click", () => {
+  $$("#app .len-btn").forEach((b) => b.addEventListener("click", () => {
     SFX.init(); SFX.click();
     if (busy) return;
     startMode("endless", +b.dataset.len);
@@ -919,8 +922,8 @@
       $("#r-sfx").classList.toggle("alt", !P.sound);
     };
   }
-  $$("#btn-sound, #l-sound, #t-sound, #m-sound").forEach((b) => (b.onclick = () => { SFX.init(); SFX.click(); showRadio(); }));
-  Radio.onChange(({ playing }) => $$("#btn-sound, #l-sound, #t-sound, #m-sound").forEach((b) => b.classList.toggle("playing", playing)));
+  $$("#btn-sound, #l-sound, #t-sound, #r-sound, #s-sound, #m-sound").forEach((b) => (b.onclick = () => { SFX.init(); SFX.click(); showRadio(); }));
+  Radio.onChange(({ playing }) => $$("#btn-sound, #l-sound, #t-sound, #r-sound, #s-sound, #m-sound").forEach((b) => b.classList.toggle("playing", playing)));
   // drop focus after clicks so Enter on the keyboard never re-clicks a button
   document.addEventListener("click", (e) => e.target.closest("button")?.blur());
   $("#modal-x").onclick = closeModal;
@@ -1029,6 +1032,8 @@
   };
   Links.setApi(NW);
   Trace.setApi(NW);
+  Rare.setApi(NW);
+  Scale.setApi(NW);
   Board.setApi(NW);
 
   function renderMenu() {
@@ -1040,6 +1045,8 @@
       : g.status === "won" ? "DAILY ✓ CRACKED" : "DAILY ✗ LOCKED OUT");
     $("#m-links").textContent = lv("links") + Links.dailyStatus(P);
     $("#m-trace").textContent = lv("trace") + Trace.dailyStatus(P);
+    $("#m-rare").textContent = lv("rare") + Rare.dailyStatus(P);
+    $("#m-scale").textContent = lv("scale") + Scale.dailyStatus(P);
     Board.sync();
   }
 
@@ -1047,8 +1054,12 @@
     if (busy) return;
     closeModal();
     document.body.dataset.game = game;
-    Trace.paint(game === "trace");
-    BG.setMode(game === "links" ? "grid" : game === "trace" ? "space" : "city", game === "trace" ? Trace.sectorFor(P) : Links.sceneFor(P));
+    // games with unlockable colours paint them onto <body>; clear all first, then the open one
+    [Trace, Rare, Scale].forEach((m) => m.paint(false));
+    ({ trace: Trace, rare: Rare, scale: Scale }[game] || { paint() {} }).paint(true);
+    const bgMode = { links: "grid", trace: "space", rare: "cave", scale: "terrain" }[game] || "city";
+    const bgScene = { links: Links.sceneFor(P), trace: Trace.sectorFor(P), rare: Rare.sceneFor(P), scale: Scale.sceneFor(P) }[game];
+    BG.setMode(bgMode, bgScene);
     document.querySelector('meta[name="theme-color"]').content = getVar("--bg");
     if (game === "menu") renderMenu();
     else if (game === "word") {
@@ -1057,6 +1068,8 @@
       if (!P.seenHelp) setTimeout(showHelp, 300);
     } else if (game === "links") Links.enter(NW);
     else if (game === "trace") Trace.enter(NW);
+    else if (game === "rare") Rare.enter(NW);
+    else if (game === "scale") Scale.enter(NW);
   }
   $$(".cart").forEach((b) => b.addEventListener("click", () => { SFX.init(); SFX.coin(); showGame(b.dataset.go); }));
   $$(".btn-home").forEach((b) => b.addEventListener("click", () => { SFX.init(); SFX.click(); showGame("menu"); }));

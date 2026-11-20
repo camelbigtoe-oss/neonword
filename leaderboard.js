@@ -28,12 +28,14 @@ const Board = (() => {
     const lv = (g) => ({ lvl: NW.levelInfo(P.lv[g]).lvl, xp: P.lv[g] });
     const w = P.games && P.games.daily, l = P.links && P.links.games && P.links.games.daily, t = P.trace && P.trace.games && P.trace.games.daily;
     return {
-      lv: { word: lv("word"), links: lv("links"), trace: lv("trace") },
+      lv: { word: lv("word"), links: lv("links"), trace: lv("trace"), rare: lv("rare"), scale: lv("scale") },
       day: today,
       daily: {
         word: w && w.date === today && w.status !== "play" ? { won: w.status === "won", n: w.guesses.length, rows: w.rows } : null,
         links: l && l.date === today && l.status !== "play" ? { won: l.status === "won", m: l.mistakes } : null,
         trace: t && t.date === today && t.status === "won" ? { won: true, h: t.hints } : null,
+        rare: Rare.todayResult(P),
+        scale: Scale.todayResult(P),
       },
     };
   }
@@ -89,7 +91,7 @@ const Board = (() => {
   }
 
   async function show() {
-    const tabs = [["today", "TODAY"], ["word", "WORD"], ["links", "LINK"], ["trace", "TRACE"]];
+    const tabs = [["today", "TODAY"], ["word", "WORD"], ["links", "LINK"], ["trace", "TRACE"], ["rare", "RARE"], ["scale", "SCALE"]];
     NW.openModal(`
       <h2>LEADERBOARD</h2>
       <div class="hist-tabs">${tabs.map(([k, n]) => `<button class="len-btn ${k === tab ? "on" : ""}" data-bt="${k}">${n}</button>`).join("")}</div>
@@ -125,6 +127,7 @@ const Board = (() => {
       if (!d) return `<span class="b-res none">–</span>`;
       if (g === "word") return d.won ? `<span class="b-res ok">${d.n}/${d.rows}</span>` : `<span class="b-res bad">X</span>`;
       if (g === "links") return d.won ? `<span class="b-res ok">${d.m}✕</span>` : `<span class="b-res bad">X</span>`;
+      if (g === "rare" || g === "scale") return `<span class="b-res ok">${d.s}</span>`;
       return `<span class="b-res ok">${d.h ? `${d.h}💡` : "✓"}</span>`;
     };
     // more dailies done first, then fewer guesses / mistakes / hints
@@ -134,14 +137,17 @@ const Board = (() => {
       if (d.word) s += d.word.won ? 100 - d.word.n * 10 : 5;
       if (d.links) s += d.links.won ? 100 - d.links.m * 10 : 5;
       if (d.trace) s += 100 - d.trace.h * 10;
+      // 700-point games count up to 100, like the others
+      if (d.rare) s += Math.round(d.rare.s / 7);
+      if (d.scale) s += Math.round(d.scale.s / 7);
       return s;
     };
     const list = rows.filter((r) => r.data).sort((a, b) => score(b) - score(a));
     if (!list.length) return `<p style="color:var(--dim)">No one yet.</p>`;
-    return `<div class="b-row b-head"><span class="b-rank"></span><span class="b-name-cell">PLAYER</span><span class="b-res">WORD</span><span class="b-res">LINK</span><span class="b-res">TRACE</span></div>` +
+    return `<div class="b-row b-head"><span class="b-rank"></span><span class="b-name-cell">PLAYER</span><span class="b-res">WORD</span><span class="b-res">LINK</span><span class="b-res">TRACE</span><span class="b-res">RARE</span><span class="b-res">SCALE</span></div>` +
       list.map((r, i) => {
         const d = r.data.day === today ? r.data.daily : {};
-        return `<div class="b-row ${r.id === me().id ? "me" : ""}"><span class="b-rank">${i + 1}</span><span class="b-name-cell">${esc(r.name)}</span>${cell(d.word, "word")}${cell(d.links, "links")}${cell(d.trace, "trace")}</div>`;
+        return `<div class="b-row ${r.id === me().id ? "me" : ""}"><span class="b-rank">${i + 1}</span><span class="b-name-cell">${esc(r.name)}</span>${cell(d.word, "word")}${cell(d.links, "links")}${cell(d.trace, "trace")}${cell(d.rare, "rare")}${cell(d.scale, "scale")}</div>`;
       }).join("");
   }
 
