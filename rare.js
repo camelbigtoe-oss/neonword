@@ -224,7 +224,8 @@ const Rare = (() => {
       for (const ch of chars) {
         const b = document.createElement("button");
         b.className = "key";
-        const map = { "<": ["DEL", "⌫"], ">": ["ENTER", "ENTER"], "#": ["NUM", nums ? "ABC" : "123"], "_": ["SPACE", "SPACE"], "^": ["CLR", "CLEAR"] };
+        // same as NEONWORD: ENTER bottom left, DEL bottom right (above CLEAR, far from ENTER)
+        const map = { "<": ["ENTER", "ENTER"], ">": ["DEL", "⌫"], "#": ["NUM", nums ? "ABC" : "123"], "_": ["SPACE", "SPACE"], "^": ["CLR", "CLEAR"] };
         const [k, label] = map[ch] || [ch, ch];
         b.dataset.k = k;
         b.textContent = label;
