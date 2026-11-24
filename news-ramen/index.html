@@ -3,24 +3,25 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>KEA — your news, no junk</title>
-  <meta name="description" content="A personal news feed from trusted sources that learns what you like.">
-  <meta name="theme-color" content="#0e1013" media="(prefers-color-scheme: dark)">
-  <meta name="theme-color" content="#f6f4ef" media="(prefers-color-scheme: light)">
+  <title>News Ramen</title>
+  <meta name="description" content="A personal news feed from trusted sources, every side of the story, that learns what you like.">
+  <meta name="theme-color" content="#0f1b2e" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f3f6fb" media="(prefers-color-scheme: light)">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="KEA">
+  <meta name="apple-mobile-web-app-title" content="News Ramen">
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="icon" href="favicon.png" type="image/png">
   <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="preload" href="fonts/okasa.otf" as="font" type="font/otf" crossorigin>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div id="app">
     <header class="topbar">
-      <button class="brand" data-go="feed" aria-label="KEA home">
-        <img src="icon.svg" alt="" width="28" height="28">
-        <span>kea</span>
+      <button class="brand" data-go="feed" aria-label="News Ramen home">
+        <img src="ramen-96.png" alt="" width="34" height="34">
+        <span class="wordmark">NEWS RAMEN</span>
       </button>
       <div class="topbar-actions">
         <button class="icon-btn" id="btn-refresh" aria-label="Refresh"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v5h-5"/></svg></button>
@@ -28,6 +29,7 @@
         <button class="icon-btn" id="btn-settings" aria-label="Settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg></button>
       </div>
     </header>
+    <div id="ptr" aria-hidden="true"><img src="ramen-96.png" alt=""></div>
 
     <main id="view" tabindex="-1"></main>
 

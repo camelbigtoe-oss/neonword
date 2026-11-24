@@ -1,4 +1,4 @@
-// KEA feed builder.
+// News Ramen feed builder.
 // Pulls stories from a fixed list of trusted outlets, drops junk, groups the
 // same story from different outlets into one "full coverage" cluster, and
 // writes data/feed.json. Also builds data/events.json for the Up Next tab.
@@ -10,7 +10,7 @@ import path from 'node:path';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DATA = path.join(ROOT, 'data');
-const UA = 'Mozilla/5.0 (compatible; KEA-news/1.0; personal feed reader)';
+const UA = 'Mozilla/5.0 (compatible; NewsRamen/1.0; personal feed reader)';
 const NOW = Date.now();
 const HOUR = 3600e3;
 
@@ -43,7 +43,50 @@ const FEEDS = [
   { id: 'thr', name: 'The Hollywood Reporter', url: 'https://www.hollywoodreporter.com/feed/', topic: 'entertainment', tier: 'B' },
   { id: 'deadline', name: 'Deadline', url: 'https://deadline.com/feed/', topic: 'entertainment', tier: 'B' },
   { id: 'zerotackle', name: 'Zero Tackle', url: 'https://www.zerotackle.com/feed/', topic: 'league', tier: 'S' },
+  // Other points of view: news from across the spectrum and abroad.
+  { id: 'newsroom', name: 'Newsroom', url: 'https://newsroom.co.nz/feed/', topic: 'nz', tier: 'B' },
+  { id: 'telegraph', name: 'The Telegraph', url: 'https://www.telegraph.co.uk/rss.xml', topic: 'world', tier: 'B', max: 20 },
+  { id: 'fox-world', name: 'Fox News', url: 'https://moxie.foxnews.com/google-publisher/world.xml', topic: 'world', tier: 'B' },
+  { id: 'wash-exam', name: 'Washington Examiner', url: 'https://www.washingtonexaminer.com/feed/', topic: 'world', tier: 'B' },
+  { id: 'intercept', name: 'The Intercept', url: 'https://theintercept.com/feed/?rss', topic: 'world', tier: 'B' },
+  { id: 'motherjones', name: 'Mother Jones', url: 'https://www.motherjones.com/feed/', topic: 'world', tier: 'B' },
+  { id: 'dw', name: 'DW', url: 'https://rss.dw.com/rdf/rss-en-world', topic: 'world', tier: 'A' },
+  { id: 'france24', name: 'France 24', url: 'https://www.france24.com/en/rss', topic: 'world', tier: 'A' },
+  { id: 'scmp', name: 'South China Morning Post', url: 'https://www.scmp.com/rss/91/feed', topic: 'world', tier: 'B', max: 20 },
+  { id: 'npr', name: 'NPR', url: 'https://feeds.npr.org/1004/rss.xml', topic: 'world', tier: 'A' },
+  // Opinion and commentary, kept in their own "Views" section.
+  { id: 'platform', name: 'The Platform', url: 'https://theplatform.kiwi/feed', topic: 'views', tier: 'S' },
+  { id: 'kiwiblog', name: 'Kiwiblog', url: 'https://www.kiwiblog.co.nz/feed', topic: 'views', tier: 'O' },
+  { id: 'pointoforder', name: 'Point of Order', url: 'https://pointofordernz.wordpress.com/feed/', topic: 'views', tier: 'O' },
+  { id: 'dailyblog', name: 'The Daily Blog', url: 'https://thedailyblog.co.nz/feed/', topic: 'views', tier: 'O' },
+  { id: 'reason', name: 'Reason', url: 'https://reason.com/feed/', topic: 'views', tier: 'S', max: 15 },
+  { id: 'freepress', name: 'The Free Press', url: 'https://www.thefp.com/feed', topic: 'views', tier: 'S' },
+  { id: 'unherd', name: 'UnHerd', url: 'https://unherd.com/feed/', topic: 'views', tier: 'S', max: 15 },
+  { id: 'natreview', name: 'National Review', url: 'https://www.nationalreview.com/feed/', topic: 'views', tier: 'S', max: 15 },
+  { id: 'nation', name: 'The Nation', url: 'https://www.thenation.com/feed/?post_type=article', topic: 'views', tier: 'S', max: 15 },
+  { id: 'jacobin', name: 'Jacobin', url: 'https://jacobin.com/feed', topic: 'views', tier: 'S', max: 15 },
+  { id: 'democracynow', name: 'Democracy Now!', url: 'https://www.democracynow.org/democracynow.rss', topic: 'views', tier: 'S', max: 15 },
+  // Mysteries, oddities and the unexplained.
+  { id: 'atlas', name: 'Atlas Obscura', url: 'https://www.atlasobscura.com/feeds/latest', topic: 'mystery', tier: 'S', days: 10 },
+  { id: 'upi-odd', name: 'UPI Odd News', url: 'https://rss.upi.com/news/odd_news.rss', topic: 'mystery', tier: 'B', days: 7 },
+  { id: 'ati', name: "All That's Interesting", url: 'https://allthatsinteresting.com/feed', topic: 'mystery', tier: 'X', days: 7, max: 25 },
+  { id: 'skeptic', name: 'Skeptical Inquirer', url: 'https://skepticalinquirer.org/feed/', topic: 'mystery', tier: 'S', days: 45 },
+  { id: 'smithsonian', name: 'Smithsonian', url: 'https://www.smithsonianmag.com/rss/latest_articles/', topic: 'science', tier: 'B', days: 7 },
+  { id: 'livescience', name: 'Live Science', url: 'https://www.livescience.com/feeds/all', topic: 'science', tier: 'S' },
 ];
+
+// Rough political lean of each outlet's news/opinion, from public media-bias
+// ratings (AllSides / Ad Fontes style). L, CL, C, CR, R. Outlets not listed
+// (tech, gaming, science, sport) aren't rated.
+const LEAN = {
+  'RNZ': 'CL', 'Stuff': 'CL', 'Newsroom': 'CL', 'NZ Herald': 'C', '1News': 'C', 'The Press': 'C', 'The Post': 'C', 'ODT': 'C',
+  'The Spinoff': 'L', 'The Daily Blog': 'L', 'Kiwiblog': 'R', 'Point of Order': 'R', 'The Platform': 'R',
+  'BBC News': 'C', 'BBC': 'C', 'Reuters': 'C', 'AP': 'CL', 'DW': 'C', 'France 24': 'C', 'South China Morning Post': 'C',
+  'NPR': 'CL', 'ABC (AU)': 'CL', 'Al Jazeera': 'CL', 'The Guardian': 'L', 'NY Times': 'CL',
+  'The Telegraph': 'CR', 'Fox News': 'R', 'Washington Examiner': 'R', 'National Review': 'R', 'Reason': 'CR', 'The Free Press': 'CR',
+  'NewsNation': 'C', 'CBC': 'CL', 'The Independent': 'CL', 'Euronews.com': 'C', 'CBS News': 'CL',
+  'UnHerd': 'C', 'The Intercept': 'L', 'Mother Jones': 'L', 'The Nation': 'L', 'Jacobin': 'L', 'Democracy Now!': 'L',
+};
 
 // Google News search is used only to *find* stories on niche topics; every
 // result must come from a domain on these allow-lists or it is dropped.
@@ -72,6 +115,11 @@ const SEARCHES = [
   { id: 'gn-hoops', topic: 'sport', days: 7,
     q: '"Tall Blacks" OR "NZ Breakers" OR "Tall Ferns"',
     allow: [...SPORT_OUTLETS, ...NZ_OUTLETS, ...GLOBAL_OUTLETS] },
+  { id: 'gn-mystery', topic: 'mystery', days: 10,
+    q: '"unsolved mystery" OR UFO OR UAP OR cryptid OR paranormal OR "cold case" OR unexplained OR "lost city" OR shipwreck',
+    allow: [...NZ_OUTLETS, ...GLOBAL_OUTLETS, 'livescience.com', 'atlasobscura.com', 'smithsonianmag.com', 'thedebrief.org',
+      'nationalgeographic.com', 'popularmechanics.com', 'newscientist.com', 'skepticalinquirer.org', 'cbsnews.com', 'npr.org',
+      'newsnationnow.com', 'cbc.ca', 'independent.co.uk', 'euronews.com'] },
   { id: 'gn-chch', topic: 'local', days: 3,
     q: 'Christchurch OR Canterbury OR Ōtautahi',
     allow: NZ_OUTLETS },
@@ -99,7 +147,7 @@ const JUNK = [
   /in pictures/i, /\bphotos?:/i, /\bgallery\b/i, /\bbest .{1,40} (to buy|for 20\d\d)\b/i, /\bgift guide\b/i,
   /\breview round-?up\b/i, /\bcodes? \(?(november|december|january|february|march|april|may|june|july|august|september|october)/i,
   /\bobituar/i, /\blotto\b.*results/i, /\bpowerball\b/i, /\bweather:? (live|warning) updates\b/i,
-  /\bwatch:? live\b/i, /- round \d+, (19|20)\d\d$/i, /live score/i, /gametracker/i, /\bsignings? tracker\b/i, /\bopinion:/i, /^letters?:/i, /\bpodcast:?\b/i, /^the detail\b/i,
+  /\bwatch:? live\b/i, /- round \d+, (19|20)\d\d$/i, /live score/i, /gametracker/i, /^general debate/i, /scratch-?off|lottery (prize|jackpot|win)|wins? .{0,20}lottery/i, /^[\w'. ]+ - \d{1,2} \w+ 20\d\d$/, /^open thread/i, /^(daily|weekly) (digest|roundup)/i, /\bsignings? tracker\b/i, /\bopinion:/i, /^letters?:/i, /\bpodcast:?\b/i, /^the detail\b/i,
 ];
 const isJunk = (t) => JUNK.some((r) => r.test(t)) || /[!?]{2,}/.test(t) || t.length < 18;
 
@@ -138,6 +186,12 @@ const TAGS = [
   ['Economy', /economy|inflation|interest rate|reserve bank|\bocr\b|recession|gdp/i, 'business'],
   ['Housing', /housing|house prices|rent(ers|al)?\b|mortgage/i, 'business'],
   ['Politics', /parliament|government|minister|election|luxon|hipkins|seymour|peters\b|labour|national party|greens/i, 'nz'],
+  ['UFOs & UAP', /\bufos?\b|\buaps?\b|alien|extraterrestrial|flying saucer/i, 'mystery'],
+  ['Unsolved', /unsolved|cold case|mysterious(ly)? (death|disappear)|vanish|missing for \d+|disappearance/i, 'mystery'],
+  ['Cryptids', /cryptid|bigfoot|sasquatch|loch ness|yeti|chupacabra|moa sighting/i, 'mystery'],
+  ['Paranormal', /paranormal|ghost|haunt|poltergeist|psychic|curse[ds]?\b/i, 'mystery'],
+  ['Lost history', /lost city|ancient|archaeolog|tomb|mummy|shipwreck|treasure|artifact|artefact|pyramid/i, 'mystery'],
+  ['Strange science', /mystery|mysterious|unexplained|baffl|bizarre|strange signal|anomal/i, 'mystery'],
   ['Crime', /police|court|charged|sentenced|murder|arrest/i, null],
   ['Weather', /metservice|weather|storm|flood|earthquake|red warning|orange warning/i, null],
 ];
@@ -183,6 +237,8 @@ function parseFeed(xml) {
       const m = decode(rawDesc + tag(b, 'content:encoded')).match(/<img[^>]+src="([^"]+)"/i);
       if (m) image = m[1];
     }
+    // Ask for bigger versions of known small thumbnails (BBC gives 240px by default).
+    image = image.replace('/standard/240/', '/standard/800/').replace(/([?&])(w|width)=\d{2,3}\b/, '$1$2=800');
     const source = tag(b, 'source');
     items.push({
       title, link, ts: Date.parse(stripHtml(date)) || NOW,
@@ -209,8 +265,8 @@ async function collect() {
       const items = parseFeed(await get(f.url));
       let kept = 0;
       for (const it of items) {
-        if (NOW - it.ts > 72 * HOUR || isJunk(it.title) || !it.link) continue;
-        if (kept++ >= 40) break;
+        if (NOW - it.ts > (f.days || 3) * 24 * HOUR || isJunk(it.title) || !it.link) continue;
+        if (kept++ >= (f.max || 40)) break;
         raw.push({ ...it, source: f.name, sourceId: f.id, tier: f.tier, topic: f.topic });
       }
       status.push([f.id, 'ok', kept]);
@@ -250,6 +306,7 @@ function enrich(it) {
     topic = titleTag[2] === 'sport' && topic !== 'sport' ? 'sport' : titleTag[2];
   }
   if (topic === 'nz' && tags.includes('Christchurch')) topic = 'local';
+  if (topic === 'science' && TAGS.some(([, re, t]) => t === 'mystery' && re.test(it.title))) topic = 'mystery';
   // Search results only keep a niche section when the story is really about it.
   if (topic === 'local' && !TAGS.find(([n]) => n === 'Christchurch')[1].test(it.title)) topic = 'nz';
   if (topic === 'league' && !tags.some((t) => ['NRL', 'Warriors', 'Kiwis'].includes(t))) topic = 'sport';
@@ -260,7 +317,7 @@ function cluster(items) {
   const sorted = items.sort((a, b) => b.ts - a.ts);
   const clusters = [];
   const seenLinks = new Set();
-  const tierRank = { A: 3, B: 2, S: 1 };
+  const tierRank = { A: 3, B: 2, S: 1, O: 0, X: 0 };
   for (const it of sorted) {
     const key = it.link.split('?')[0];
     if (seenLinks.has(key)) continue;
@@ -291,10 +348,10 @@ function cluster(items) {
     const tags = [...new Set(items.flatMap((x) => x.tags))];
     const id = hash(lead.link);
     return {
-      id, title: lead.title, link: lead.link, source: lead.source, sourceId: lead.sourceId, tier: lead.tier,
+      id, title: lead.title, link: lead.link, source: lead.source, sourceId: lead.sourceId, tier: lead.tier, lean: LEAN[lead.source] || '',
       topic: lead.topic, tags, summary, image, ts: Math.max(...items.map((x) => x.ts)),
       first: Math.min(...items.map((x) => x.ts)), words: [...c.tokSet].slice(0, 14),
-      coverage: items.slice(1, 8).map((x) => ({ source: x.source, tier: x.tier, title: x.title, link: x.link, ts: x.ts })),
+      coverage: items.slice(1, 10).map((x) => ({ source: x.source, tier: x.tier, lean: LEAN[x.source] || '', title: x.title, link: x.link, ts: x.ts })),
     };
   });
 }
@@ -363,7 +420,7 @@ async function buildEvents() {
 
 // ---------------------------------------------------------------- main
 const { raw, status } = await collect();
-const stories = cluster(raw.map(enrich)).sort((a, b) => b.ts - a.ts).slice(0, 450);
+const stories = cluster(raw.map(enrich)).sort((a, b) => b.ts - a.ts).slice(0, 800);
 const ev = await buildEvents();
 await mkdir(DATA, { recursive: true });
 await writeFile(path.join(DATA, 'feed.json'), JSON.stringify({ generated: new Date(NOW).toISOString(), stories }));

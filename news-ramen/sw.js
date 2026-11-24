@@ -1,8 +1,8 @@
-// KEA service worker: app shell offline, news network-first, saved images cached.
-const SHELL = 'kea-shell-v1';
-const DATA = 'kea-data-v1';
-const IMG = 'kea-img-v1';
-const FILES = ['./', 'index.html', 'style.css', 'app.js', 'icon.svg', 'icon-192.png', 'manifest.webmanifest'];
+// News Ramen service worker: app shell offline, news network-first, saved images cached.
+const SHELL = 'ramen-shell-v1';
+const DATA = 'ramen-data-v1';
+const IMG = 'ramen-img-v1';
+const FILES = ['./', 'index.html', 'style.css', 'app.js', 'ramen-96.png', 'favicon.png', 'fonts/okasa.otf', 'icon-192.png', 'manifest.webmanifest'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(SHELL).then((c) => c.addAll(FILES)).then(() => self.skipWaiting()));
@@ -25,12 +25,10 @@ self.addEventListener('fetch', (e) => {
     return;
   }
   if (url.origin === location.origin) {
-    // App files: stale-while-revalidate so updates land on the next open.
-    e.respondWith(caches.open(SHELL).then(async (c) => {
-      const hit = await c.match(e.request, { ignoreSearch: true });
-      const net = fetch(e.request).then((r) => { if (r.ok) c.put(e.request, r.clone()); return r; }).catch(() => hit);
-      return hit || net;
-    }));
+    // App files: network first so updates show straight away; cached copy when offline.
+    e.respondWith(caches.open(SHELL).then((c) => fetch(e.request)
+      .then((r) => { if (r.ok) c.put(e.request, r.clone()); return r; })
+      .catch(() => c.match(e.request, { ignoreSearch: true }))));
     return;
   }
   if (e.request.destination === 'image') {
